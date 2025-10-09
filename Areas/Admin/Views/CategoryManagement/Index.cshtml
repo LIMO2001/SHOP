@@ -1,0 +1,96 @@
+@using LaptopStore.Models
+@model List<LaptopStore.Models.Category>
+@{
+    ViewData["Title"] = "Manage Categories";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-tags me-2"></i>Manage Categories
+        </h1>
+        <a href="@Url.Action("Create", "CategoryManagement", new { area = "Admin" })" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Add New Category
+        </a>
+    </div>
+
+    <!-- Success/Error Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        @if (!Model.Any())
+        {
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No categories found</h5>
+                        <p class="text-muted">Get started by creating your first category.</p>
+                        <a href="@Url.Action("Create", "CategoryManagement", new { area = "Admin" })" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Create Category
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var category in Model)
+            {
+                <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card shadow h-100">
+                        <img src="@category.ImageUrl" class="card-img-top" alt="@category.Name" style="height: 150px; object-fit: cover;">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@category.Name</h5>
+                            <p class="card-text flex-grow-1">@category.Description</p>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-info">
+                                        @category.Products?.Count() Products
+                                    </span>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="@Url.Action("Edit", "CategoryManagement", new { area = "Admin", id = category.Id })" 
+                                           class="btn btn-outline-primary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form method="post" action="@Url.Action("Delete", "CategoryManagement", new { area = "Admin", id = category.Id })" 
+                                              class="d-inline" onsubmit="return confirm('Are you sure you want to delete this category? This will also delete all products in this category.');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-hide alerts
+        setTimeout(function() {
+            $('.alert').alert('close');
+        }, 5000);
+    </script>
+}

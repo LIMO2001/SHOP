@@ -1,0 +1,245 @@
+@using LaptopStore.Controllers
+@using static LaptopStore.Controllers.AccountController
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Create Account";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title text-center">
+                    <i class="fas fa-user-plus"></i> Create Your Account
+                </h3>
+            </div>
+            <div class="card-body">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <form method="post" asp-action="Register" id="registerForm">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="FirstName" class="form-label">First Name</label>
+                                <input asp-for="FirstName" class="form-control" placeholder="Enter your first name">
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="LastName" class="form-label">Last Name</label>
+                                <input asp-for="LastName" class="form-control" placeholder="Enter your last name">
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">Email Address</label>
+                        <input asp-for="Email" class="form-control" placeholder="Enter your email address">
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                        <div class="form-text">We'll never share your email with anyone else.</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Password" class="form-label">Password</label>
+                                <input asp-for="Password" type="password" class="form-control" placeholder="Create a password">
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                                
+                                <div class="password-strength mt-2">
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar" id="passwordStrengthBar"></div>
+                                    </div>
+                                    <small class="text-muted" id="passwordStrengthText">Password strength</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                                <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Confirm your password">
+                                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="termsAgreement" required>
+                        <label class="form-check-label" for="termsAgreement">
+                            I agree to the <a href="#" class="text-primary">Terms of Service</a> and <a href="#" class="text-primary">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg" id="registerButton">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </button>
+                    </div>
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger mt-3"></div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="mb-0">Already have an account?</p>
+                    <a asp-action="Login" class="btn btn-outline-primary mt-2">
+                        <i class="fas fa-sign-in-alt"></i> Login to Existing Account
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benefits Section -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title text-center">
+                    <i class="fas fa-gift"></i> Benefits of Creating an Account
+                </h6>
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
+                        <h6>Easy Ordering</h6>
+                        <small class="text-muted">Quick checkout process</small>
+                    </div>
+                    <div class="col-md-3">
+                        <i class="fas fa-history fa-2x text-primary mb-2"></i>
+                        <h6>Order History</h6>
+                        <small class="text-muted">Track your purchases</small>
+                    </div>
+                    <div class="col-md-3">
+                        <i class="fas fa-tags fa-2x text-primary mb-2"></i>
+                        <h6>Exclusive Deals</h6>
+                        <small class="text-muted">Special offers for members</small>
+                    </div>
+                    <div class="col-md-3">
+                        <i class="fas fa-heart fa-2x text-primary mb-2"></i>
+                        <h6>Wishlist</h6>
+                        <small class="text-muted">Save your favorite laptops</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Password strength indicator
+        document.getElementById('Password').addEventListener('input', function() {
+            const password = this.value;
+            const strengthBar = document.getElementById('passwordStrengthBar');
+            const strengthText = document.getElementById('passwordStrengthText');
+            
+            let strength = 0;
+            let text = 'Password strength';
+            let color = 'bg-danger';
+            
+            if (password.length >= 6) strength += 25;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength += 25;
+            if (password.match(/\d/)) strength += 25;
+            if (password.match(/[^a-zA-Z\d]/)) strength += 25;
+            
+            strengthBar.style.width = strength + '%';
+            
+            if (strength >= 75) {
+                color = 'bg-success';
+                text = 'Strong password';
+            } else if (strength >= 50) {
+                color = 'bg-warning';
+                text = 'Medium password';
+            } else if (strength >= 25) {
+                color = 'bg-danger';
+                text = 'Weak password';
+            } else {
+                color = 'bg-danger';
+                text = 'Very weak password';
+            }
+            
+            strengthBar.className = 'progress-bar ' + color;
+            strengthText.textContent = text;
+            strengthText.className = 'text-muted';
+            
+            if (strength >= 75) {
+                strengthText.className = 'text-success';
+            } else if (strength >= 50) {
+                strengthText.className = 'text-warning';
+            } else {
+                strengthText.className = 'text-danger';
+            }
+        });
+
+        // Confirm password validation
+        document.getElementById('ConfirmPassword').addEventListener('input', function() {
+            const password = document.getElementById('Password').value;
+            const confirmPassword = this.value;
+            const confirmPasswordSpan = document.querySelector('[data-valmsg-for="ConfirmPassword"]');
+            
+            if (confirmPassword && password !== confirmPassword) {
+                if (confirmPasswordSpan) {
+                    confirmPasswordSpan.textContent = 'Passwords do not match';
+                    confirmPasswordSpan.className = 'text-danger field-validation-error';
+                }
+            } else if (confirmPasswordSpan) {
+                confirmPasswordSpan.textContent = '';
+            }
+        });
+
+        // Form submission validation
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const termsAgreement = document.getElementById('termsAgreement');
+            if (!termsAgreement.checked) {
+                e.preventDefault();
+                alert('Please agree to the Terms of Service and Privacy Policy');
+                termsAgreement.focus();
+            }
+        });
+
+        // Auto-hide alerts
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+
+    <style>
+        .password-strength .progress {
+            background-color: #e9ecef;
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+    </style>
+}
