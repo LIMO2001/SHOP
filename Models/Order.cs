@@ -12,7 +12,9 @@ namespace LaptopStore.Models
 
         // Foreign key
         public int UserId { get; set; }
-        public User User { get; set; } = null!;
+        
+        // Navigation property - REMOVE required constraint
+        public User User { get; set; } = null!; // Remove the required validation
 
         // Navigation property
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();

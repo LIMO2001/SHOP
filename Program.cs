@@ -78,6 +78,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<ReceiptService>(); // ADDED: PDF Receipt Service
 
 // Authorization Policies
 builder.Services.AddAuthorization(options =>

@@ -1,3 +1,4 @@
+@using LaptopStore.Models
 @model List<Product>
 @{
     ViewData["Title"] = "Welcome to LaptopStore";
@@ -17,14 +18,38 @@
         @foreach (var product in Model)
         {
             <div class="col-md-3 mb-4">
-                <div class="card h-100">
+                <div class="card h-100 product-card">
                     <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: cover;">
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">@product.Name</h5>
-                        <p class="card-text flex-grow-1">@product.Processor, @product.RAM, @product.Storage</p>
+                        <p class="card-text flex-grow-1">
+                            <small class="text-muted">
+                                <i class="fas fa-microchip me-1"></i>@product.Processor<br>
+                                <i class="fas fa-memory me-1"></i>@product.RAM<br>
+                                <i class="fas fa-hdd me-1"></i>@product.Storage
+                            </small>
+                        </p>
                         <div class="mt-auto">
-                            <p class="h5 text-primary">$@product.Price</p>
-                            <a href="@Url.Action("ProductDetails", "Store", new { id = product.Id })" class="btn btn-primary w-100">View Details</a>
+                            <p class="h5 text-primary mb-2">$@product.Price.ToString("N2")</p>
+                            <div class="d-grid gap-2">
+                                <a href="@Url.Action("ProductDetails", "Store", new { id = product.Id })" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                                @if (product.StockQuantity > 0)
+                                {
+                                    <button class="btn btn-primary btn-sm add-to-cart" 
+                                            data-product-id="@product.Id"
+                                            data-product-name="@product.Name">
+                                        <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-secondary btn-sm" disabled>
+                                        <i class="fas fa-bell me-1"></i>Out of Stock
+                                    </button>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -32,3 +57,81 @@
         }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Add to Cart functionality with AJAX
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const productId = this.dataset.productId;
+                    const productName = this.dataset.productName;
+                    const button = this;
+                    
+                    // Show loading state
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding...';
+                    button.disabled = true;
+                    
+                    try {
+                        const response = await fetch('/Cart/AddToCart?productId=' + productId + '&quantity=1', {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            if (result.success) {
+                                // Update cart count in navigation
+                                $('#cartCount').text(result.cartCount);
+                                
+                                // Show success message
+                                showToast('Success', result.message, 'success');
+                                
+                                // Update button to show success
+                                button.innerHTML = '<i class="fas fa-check me-1"></i>Added!';
+                                setTimeout(() => {
+                                    button.innerHTML = originalText;
+                                    button.disabled = false;
+                                }, 2000);
+                            } else {
+                                showToast('Error', 'Failed to add product to cart', 'error');
+                                button.innerHTML = originalText;
+                                button.disabled = false;
+                            }
+                        } else {
+                            showToast('Error', 'Failed to add product to cart', 'error');
+                            button.innerHTML = originalText;
+                            button.disabled = false;
+                        }
+                    } catch (error) {
+                        console.error('Error adding to cart:', error);
+                        showToast('Error', 'Error adding product to cart', 'error');
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }
+                });
+            });
+        });
+
+        // Toast notification function
+        function showToast(title, message, type) {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+            toast.innerHTML = `
+                <strong>${title}</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(toast);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+}

@@ -28,15 +28,26 @@ namespace LaptopStore.Data
             modelBuilder.Entity<Product>(entity =>
             {
                 entity.HasKey(p => p.Id);
+                entity.Property(p => p.Price).HasColumnType("decimal(18,2)"); // Add decimal precision
                 entity.HasOne(p => p.Category)
                       .WithMany(c => c.Products)
                       .HasForeignKey(p => p.CategoryId);
+            });
+
+            // Category configuration
+            modelBuilder.Entity<Category>(entity =>
+            {
+                entity.HasKey(c => c.Id);
+                entity.Property(c => c.Name).IsRequired().HasMaxLength(100); // Make Name required
+                entity.Property(c => c.Description).HasDefaultValue(""); // Default empty description
+                entity.Property(c => c.ImageUrl).HasDefaultValue("/images/default-category.jpg"); // Default image
             });
 
             // Order configuration
             modelBuilder.Entity<Order>(entity =>
             {
                 entity.HasKey(o => o.Id);
+                entity.Property(o => o.TotalAmount).HasColumnType("decimal(18,2)"); // Add decimal precision
                 entity.HasOne(o => o.User)
                       .WithMany(u => u.Orders)
                       .HasForeignKey(o => o.UserId);
@@ -46,6 +57,7 @@ namespace LaptopStore.Data
             modelBuilder.Entity<OrderItem>(entity =>
             {
                 entity.HasKey(oi => oi.Id);
+                entity.Property(oi => oi.UnitPrice).HasColumnType("decimal(18,2)"); // Add decimal precision
                 entity.HasOne(oi => oi.Order)
                       .WithMany(o => o.OrderItems)
                       .HasForeignKey(oi => oi.OrderId);

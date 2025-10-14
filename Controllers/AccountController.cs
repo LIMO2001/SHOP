@@ -47,7 +47,7 @@ namespace LaptopStore.Controllers
             
             if (user == null)
             {
-                Console.WriteLine($"❌ USER NOT FOUND: {model.Email}");
+                Console.WriteLine($" USER NOT FOUND: {model.Email}");
                 ModelState.AddModelError("", "Invalid email or password");
                 return View(model);
             }

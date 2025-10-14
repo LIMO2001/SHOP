@@ -5,6 +5,7 @@ namespace LaptopStore.Models
         public int Id { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+        public string ProductName { get; set; } = string.Empty; // ADDED for PDF receipts
 
         // Foreign keys
         public int OrderId { get; set; }

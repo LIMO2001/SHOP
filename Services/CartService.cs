@@ -23,7 +23,15 @@ namespace LaptopStore.Services
                 .ToListAsync();
         }
 
-        public async Task AddToCartAsync(int userId, int productId, int quantity = 1)
+        // ADD THIS METHOD for cart count
+        public async Task<int> GetCartItemCountAsync(int userId)
+        {
+            return await _context.CartItems
+                .Where(ci => ci.UserId == userId)
+                .SumAsync(ci => ci.Quantity);
+        }
+
+        public async Task<CartItem?> AddToCartAsync(int userId, int productId, int quantity = 1)
         {
             var existingItem = await _context.CartItems
                 .FirstOrDefaultAsync(ci => ci.UserId == userId && ci.ProductId == productId);
@@ -41,36 +49,47 @@ namespace LaptopStore.Services
                     Quantity = quantity
                 };
                 _context.CartItems.Add(cartItem);
+                existingItem = cartItem;
             }
 
             await _context.SaveChangesAsync();
+            return await _context.CartItems
+                .Include(ci => ci.Product)
+                .FirstOrDefaultAsync(ci => ci.Id == existingItem.Id);
         }
 
-        public async Task UpdateCartItemQuantityAsync(int cartItemId, int quantity)
+        public async Task<bool> UpdateCartItemQuantityAsync(int userId, int cartItemId, int quantity)
         {
-            var cartItem = await _context.CartItems.FindAsync(cartItemId);
-            if (cartItem != null)
-            {
-                if (quantity <= 0)
-                {
-                    _context.CartItems.Remove(cartItem);
-                }
-                else
-                {
-                    cartItem.Quantity = quantity;
-                }
-                await _context.SaveChangesAsync();
-            }
-        }
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.Id == cartItemId && ci.UserId == userId);
+                
+            if (cartItem == null)
+                return false;
 
-        public async Task RemoveFromCartAsync(int cartItemId)
-        {
-            var cartItem = await _context.CartItems.FindAsync(cartItemId);
-            if (cartItem != null)
+            if (quantity <= 0)
             {
                 _context.CartItems.Remove(cartItem);
-                await _context.SaveChangesAsync();
             }
+            else
+            {
+                cartItem.Quantity = quantity;
+            }
+            
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> RemoveFromCartAsync(int userId, int cartItemId)
+        {
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.Id == cartItemId && ci.UserId == userId);
+                
+            if (cartItem == null)
+                return false;
+
+            _context.CartItems.Remove(cartItem);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<decimal> GetCartTotalAsync(int userId)

@@ -18,8 +18,8 @@
         </div>
     </div>
 
+    <!-- Statistics Cards -->
     <div class="row">
-        <!-- Statistics Cards -->
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
@@ -28,7 +28,9 @@
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 Total Products
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalProducts">0</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @ViewBag.TotalProducts
+                            </div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-laptop fa-2x text-gray-300"></i>
@@ -46,7 +48,9 @@
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                 Total Categories
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalCategories">0</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @ViewBag.TotalCategories
+                            </div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-tags fa-2x text-gray-300"></i>
@@ -64,7 +68,9 @@
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                 Total Users
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalUsers">0</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @ViewBag.TotalUsers
+                            </div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-users fa-2x text-gray-300"></i>
@@ -82,7 +88,9 @@
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                 Total Orders
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalOrders">0</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @ViewBag.TotalOrders
+                            </div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
@@ -93,33 +101,224 @@
         </div>
     </div>
 
+    <!-- Additional Stats Row -->
+    <div class="row">
+        <!-- Total Revenue -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Total Revenue
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                $@(ViewBag.TotalRevenue?.ToString("N2") ?? "0.00")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Alert -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Low Stock Products
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.LowStockProducts?.Count ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Recent Orders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.RecentOrders?.Count ?? 0)
+                            </div>
+                            <div class="text-xs text-muted">Last 5 orders</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders & Low Stock Tables -->
+    <div class="row">
+        <!-- Recent Orders Table -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-shopping-cart me-2"></i>Recent Orders
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.RecentOrders != null && ViewBag.RecentOrders.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Customer</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in ViewBag.RecentOrders)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <small class="text-muted">@order.OrderNumber</small>
+                                            </td>
+                                            <td>@order.CustomerName</td>
+                                            <td>$@order.TotalAmount.ToString("N2")</td>
+                                            <td>
+                                                <span class="badge bg-@GetStatusBadgeClass(order.Status)">
+                                                    @order.Status
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-shopping-cart fa-2x mb-3"></i>
+                            <p>No recent orders</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Products Table -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alert
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.LowStockProducts != null && ViewBag.LowStockProducts.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Stock</th>
+                                        <th>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var product in ViewBag.LowStockProducts)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold">@product.Name</div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@(product.StockQuantity <= 5 ? "danger" : "warning")">
+                                                    @product.StockQuantity left
+                                                </span>
+                                            </td>
+                                            <td>$@product.Price.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <a href="@Url.Action("Index", "ProductManagement", new { area = "Admin" })" class="btn btn-warning btn-sm">
+                                <i class="fas fa-boxes me-1"></i>Manage Inventory
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                            <p>All products have sufficient stock</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="row">
         <div class="col-12">
-            <div class="card shadow mb-4">
+            <div class="card shadow">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h6>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-3">
-                            <a href="@Url.Action("Create", "ProductManagement", new { area = "Admin" })" class="btn btn-primary btn-block">
-                                <i class="fas fa-plus me-1"></i>Add New Product
+                            <a href="@Url.Action("Create", "ProductManagement", new { area = "Admin" })" class="btn btn-primary btn-block h-100">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                                    <span>Add New Product</span>
+                                </div>
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="@Url.Action("Create", "CategoryManagement", new { area = "Admin" })" class="btn btn-success btn-block">
-                                <i class="fas fa-plus me-1"></i>Add New Category
+                            <a href="@Url.Action("Create", "CategoryManagement", new { area = "Admin" })" class="btn btn-success btn-block h-100">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fas fa-tags fa-2x mb-2"></i>
+                                    <span>Add New Category</span>
+                                </div>
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="@Url.Action("Index", "ProductManagement", new { area = "Admin" })" class="btn btn-info btn-block">
-                                <i class="fas fa-list me-1"></i>View All Products
+                            <a href="@Url.Action("Index", "ProductManagement", new { area = "Admin" })" class="btn btn-info btn-block h-100">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fas fa-list fa-2x mb-2"></i>
+                                    <span>View All Products</span>
+                                </div>
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="@Url.Action("Index", "Store")" class="btn btn-warning btn-block">
-                                <i class="fas fa-store me-1"></i>View Storefront
+                            <a href="@Url.Action("Index", "Store")" class="btn btn-warning btn-block h-100" target="_blank">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fas fa-store fa-2x mb-2"></i>
+                                    <span>View Storefront</span>
+                                </div>
                             </a>
                         </div>
                     </div>
@@ -129,24 +328,32 @@
     </div>
 </div>
 
+@functions {
+    public string GetStatusBadgeClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "pending" => "secondary",
+            "processing" => "info", 
+            "shipped" => "primary",
+            "delivered" => "success",
+            "completed" => "success",
+            "cancelled" => "danger",
+            _ => "secondary"
+        };
+    }
+}
+
 @section Scripts {
     <script>
-        // Load dashboard statistics
+        // You can add auto-refresh functionality here if needed
         $(document).ready(function() {
-            loadDashboardStats();
+            console.log('Dashboard loaded successfully');
+            
+            // Auto-refresh every 30 seconds (optional)
+            // setInterval(() => {
+            //     location.reload();
+            // }, 30000);
         });
-
-        async function loadDashboardStats() {
-            try {
-                // You can implement API endpoints to get these statistics
-                // For now, we'll set some placeholder values
-                $('#totalProducts').text('0');
-                $('#totalCategories').text('0');
-                $('#totalUsers').text('0');
-                $('#totalOrders').text('0');
-            } catch (error) {
-                console.error('Error loading dashboard stats:', error);
-            }
-        }
     </script>
 }

@@ -9,10 +9,28 @@
         <h1 class="h3 mb-0">
             <i class="fas fa-edit me-2"></i>Edit Product
         </h1>
-        <a href="@Url.Action("Index", "ProductManagement", new { area = "Admin" })" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-1"></i>Back to Products
-        </a>
+        <div>
+            <a href="@Url.Action("Index", "ProductManagement", new { area = "Admin" })" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Products
+            </a>
+        </div>
     </div>
+
+    <!-- Display TempData messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
     <div class="row">
         <div class="col-lg-8">
@@ -21,110 +39,212 @@
                     <h6 class="m-0 font-weight-bold text-primary">Edit Product Information</h6>
                 </div>
                 <div class="card-body">
-                    <form method="post" asp-action="Edit">
+                    <form method="post" asp-action="Edit" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="CreatedAt" />
+                        
+                        <!-- Validation Summary -->
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
                         
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Name" class="form-label">Product Name *</label>
-                                    <input asp-for="Name" class="form-control">
-                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                    <input asp-for="Name" class="form-control" placeholder="Enter product name">
+                                    <span asp-validation-for="Name" class="text-danger small"></span>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                                <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="CategoryId" class="form-label">Category *</label>
-                                    <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.Categories">
+                                    <select asp-for="CategoryId" class="form-control" id="categoryField" required>
                                         <option value="">-- Select Category --</option>
+                                        @if (ViewBag.Categories != null)
+                                        {
+                                            @foreach (var item in ViewBag.Categories)
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        }
                                     </select>
                                     <span asp-validation-for="CategoryId" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
+                
 
                         <div class="mb-3">
-                            <label asp-for="Description" class="form-label">Description</label>
-                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
+                            <label asp-for="Description" class="form-label">Description *</label>
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Enter detailed product description"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
                         </div>
 
+                        <!-- Pricing and Stock Section -->
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Price" class="form-label">Price *</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
-                                        <input asp-for="Price" type="number" step="0.01" class="form-control">
+                                        <input asp-for="Price" type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00">
                                     </div>
-                                    <span asp-validation-for="Price" class="text-danger"></span>
+                                    <span asp-validation-for="Price" class="text-danger small"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="StockQuantity" class="form-label">Stock Quantity *</label>
-                                    <input asp-for="StockQuantity" type="number" class="form-control">
-                                    <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                                    <input asp-for="StockQuantity" type="number" min="0" class="form-control" placeholder="0">
+                                    <span asp-validation-for="StockQuantity" class="text-danger small"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label asp-for="ImageUrl" class="form-label">Image URL</label>
-                                    <input asp-for="ImageUrl" class="form-control">
-                                    <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                                    <label asp-for="Brand" class="form-label">Brand *</label>
+                                    <input asp-for="Brand" class="form-control" placeholder="e.g., Dell, HP, Lenovo">
+                                    <span asp-validation-for="Brand" class="text-danger small"></span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label asp-for="Processor" class="form-label">Processor</label>
-                                    <input asp-for="Processor" class="form-control">
-                                    <span asp-validation-for="Processor" class="text-danger"></span>
-                                </div>
+                        <!-- Image Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="m-0 font-weight-bold text-primary">Product Images</h6>
                             </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label asp-for="RAM" class="form-label">RAM</label>
-                                    <input asp-for="RAM" class="form-control">
-                                    <span asp-validation-for="RAM" class="text-danger"></span>
+                            <div class="card-body">
+                                <!-- Current Image -->
+                                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                                {
+                                    <div class="mb-3">
+                                        <label class="form-label">Current Image</label>
+                                        <div class="d-flex align-items-center">
+                                            <img src="@Model.ImageUrl" class="img-thumbnail me-3" style="max-height: 150px;" alt="Current product image">
+                                            <div>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearImage()">
+                                                    <i class="fas fa-trash me-1"></i>Remove Image
+                                                </button>
+                                                <div class="form-text mt-1">Remove the current image</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Upload New Image</label>
+                                            <input type="file" name="ImageFile" class="form-control" accept="image/*">
+                                            <div class="form-text">
+                                                Recommended size: 500x500 pixels. Max file size: 5MB
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="ImageUrl" class="form-label">Or Image URL</label>
+                                            <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/image.jpg">
+                                            <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                                            <div class="form-text">Alternative to file upload</div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label asp-for="Storage" class="form-label">Storage</label>
-                                    <input asp-for="Storage" class="form-control">
-                                    <span asp-validation-for="Storage" class="text-danger"></span>
+
+                                <!-- Image Preview -->
+                                <div class="mt-3">
+                                    <label class="form-label">Image Preview</label>
+                                    <div class="text-center border rounded p-3 bg-light">
+                                        <div id="imagePreview" style="display: none;">
+                                            <img id="previewImage" class="img-fluid rounded" style="max-height: 150px;" alt="Image preview">
+                                        </div>
+                                        <div id="noImage" class="text-muted @(string.IsNullOrEmpty(Model.ImageUrl) ? "" : "d-none")">
+                                            <i class="fas fa-image fa-2x mb-2"></i>
+                                            <p class="mb-0">No image selected</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Display" class="form-label">Display</label>
-                                    <input asp-for="Display" class="form-control">
-                                    <span asp-validation-for="Display" class="text-danger"></span>
-                                </div>
+                        <!-- Specifications Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="m-0 font-weight-bold text-primary">Specifications</h6>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Graphics" class="form-label">Graphics</label>
-                                    <input asp-for="Graphics" class="form-control">
-                                    <span asp-validation-for="Graphics" class="text-danger"></span>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="Processor" class="form-label">Processor *</label>
+                                            <input asp-for="Processor" class="form-control" placeholder="e.g., Intel Core i7-1165G7">
+                                            <span asp-validation-for="Processor" class="text-danger small"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="RAM" class="form-label">RAM *</label>
+                                            <input asp-for="RAM" class="form-control" placeholder="e.g., 16GB DDR4">
+                                            <span asp-validation-for="RAM" class="text-danger small"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="Storage" class="form-label">Storage *</label>
+                                            <input asp-for="Storage" class="form-control" placeholder="e.g., 512GB NVMe SSD">
+                                            <span asp-validation-for="Storage" class="text-danger small"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="Display" class="form-label">Display *</label>
+                                            <input asp-for="Display" class="form-control" placeholder="e.g., 15.6\" FHD (1920x1080)">
+                                            <span asp-validation-for="Display" class="text-danger small"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="Graphics" class="form-label">Graphics Card</label>
+                                            <input asp-for="Graphics" class="form-control" placeholder="e.g., NVIDIA GeForce RTX 3050">
+                                            <span asp-validation-for="Graphics" class="text-danger small"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Created Date</label>
+                                            <input type="text" class="form-control" value="@Model.CreatedAt.ToString("MMM dd, yyyy")" readonly>
+                                            <div class="form-text">Product creation date</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mb-3 form-check">
-                            <input asp-for="IsFeatured" class="form-check-input">
-                            <label asp-for="IsFeatured" class="form-check-label">Feature this product on homepage</label>
+                        <!-- Settings Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="m-0 font-weight-bold text-primary">Settings</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3 form-check form-switch">
+                                    <input asp-for="IsFeatured" class="form-check-input" role="switch">
+                                    <label asp-for="IsFeatured" class="form-check-label">Feature this product on homepage</label>
+                                </div>
+                                <div class="mb-3 form-check form-switch">
+                                    <input asp-for="IsActive" class="form-check-input" role="switch">
+                                    <label asp-for="IsActive" class="form-check-label">Product is active and visible to customers</label>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="@Url.Action("Index", "ProductManagement", new { area = "Admin" })" class="btn btn-secondary me-md-2">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-3">
+                            <a href="@Url.Action("Index", "ProductManagement", new { area = "Admin" })" class="btn btn-outline-secondary me-md-2">
                                 <i class="fas fa-times me-1"></i>Cancel
                             </a>
                             <button type="submit" class="btn btn-primary">
@@ -136,19 +256,49 @@
             </div>
         </div>
         
+        <!-- Preview Section -->
         <div class="col-lg-4">
-            <div class="card shadow mb-4">
+            <div class="card shadow sticky-top" style="top: 20px;">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Product Preview</h6>
                 </div>
                 <div class="card-body text-center">
-                    <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded mb-3" style="max-height: 200px;">
-                    <h5>@Model.Name</h5>
-                    <p class="text-muted">@Model.Processor</p>
-                    <h4 class="text-success">$@Model.Price</h4>
-                    <span class="badge @(Model.StockQuantity > 0 ? "bg-success" : "bg-danger")">
-                        @Model.StockQuantity in stock
-                    </span>
+                    <div id="livePreview">
+                        <img id="previewImg" src="@Model.ImageUrl" alt="@Model.Name" 
+                             class="img-fluid rounded mb-3 @(string.IsNullOrEmpty(Model.ImageUrl) ? "d-none" : "")" 
+                             style="max-height: 200px;">
+                        <div id="noPreviewImage" class="@(string.IsNullOrEmpty(Model.ImageUrl) ? "" : "d-none")">
+                            <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No image available</p>
+                        </div>
+                        <h5 id="previewName">@Model.Name</h5>
+                        <p id="previewProcessor" class="text-muted">@Model.Processor</p>
+                        <h4 id="previewPrice" class="text-success">$@Model.Price.ToString("N2")</h4>
+                        <span id="previewStock" class="badge @(Model.StockQuantity > 0 ? "bg-success" : "bg-danger")">
+                            @Model.StockQuantity in stock
+                        </span>
+                        <div class="mt-3">
+                            <small class="text-muted">Last updated: @DateTime.Now.ToString("MMM dd, yyyy HH:mm")</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card shadow mt-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("Details", "Store", new { area = "", id = Model.Id })" 
+                           target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>View on Site
+                        </a>
+                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="resetForm()">
+                            <i class="fas fa-undo me-1"></i>Reset Changes
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -157,4 +307,128 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageFileInput = document.querySelector('input[name="ImageFile"]');
+            const imageUrlInput = document.getElementById('ImageUrl');
+            const previewImage = document.getElementById('previewImage');
+            const imagePreview = document.getElementById('imagePreview');
+            const noImage = document.getElementById('noImage');
+            const livePreviewImg = document.getElementById('previewImg');
+            const noPreviewImage = document.getElementById('noPreviewImage');
+
+            // Live preview updates
+            const nameInput = document.getElementById('Name');
+            const priceInput = document.getElementById('Price');
+            const stockInput = document.getElementById('StockQuantity');
+            const processorInput = document.getElementById('Processor');
+
+            // Update live preview as user types
+            if (nameInput) nameInput.addEventListener('input', updateLivePreview);
+            if (priceInput) priceInput.addEventListener('input', updateLivePreview);
+            if (stockInput) stockInput.addEventListener('input', updateLivePreview);
+            if (processorInput) processorInput.addEventListener('input', updateLivePreview);
+
+            function updateLivePreview() {
+                const previewName = document.getElementById('previewName');
+                const previewPrice = document.getElementById('previewPrice');
+                const previewStock = document.getElementById('previewStock');
+                const previewProcessor = document.getElementById('previewProcessor');
+
+                if (previewName && nameInput) previewName.textContent = nameInput.value || '@Model.Name';
+                if (previewPrice && priceInput) previewPrice.textContent = '$' + (parseFloat(priceInput.value) || @Model.Price).toFixed(2);
+                if (previewProcessor && processorInput) previewProcessor.textContent = processorInput.value || '@Model.Processor';
+                
+                if (previewStock && stockInput) {
+                    const stock = parseInt(stockInput.value) || @Model.StockQuantity;
+                    previewStock.textContent = stock + ' in stock';
+                    previewStock.className = 'badge ' + (stock > 0 ? 'bg-success' : 'bg-danger');
+                }
+            }
+
+            // Image preview functionality
+            if (imageFileInput) {
+                imageFileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    
+                    if (file) {
+                        // Validate file type and size
+                        if (!file.type.startsWith('image/')) {
+                            alert('Please select an image file (JPG, PNG, GIF, etc.)');
+                            this.value = '';
+                            return;
+                        }
+
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert('File size must be less than 5MB');
+                            this.value = '';
+                            return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImage.src = e.target.result;
+                            imagePreview.style.display = 'block';
+                            noImage.style.display = 'none';
+                            
+                            // Update live preview
+                            livePreviewImg.src = e.target.result;
+                            livePreviewImg.classList.remove('d-none');
+                            noPreviewImage.classList.add('d-none');
+                        }
+                        reader.readAsDataURL(file);
+                        
+                        // Clear URL input
+                        imageUrlInput.value = '';
+                    }
+                });
+            }
+
+            if (imageUrlInput) {
+                imageUrlInput.addEventListener('input', function() {
+                    const url = this.value.trim();
+                    
+                    if (url) {
+                        // Update preview
+                        livePreviewImg.src = url;
+                        livePreviewImg.classList.remove('d-none');
+                        noPreviewImage.classList.add('d-none');
+                        
+                        // Clear file input
+                        imageFileInput.value = '';
+                    } else if (!imageFileInput.files.length) {
+                        livePreviewImg.classList.add('d-none');
+                        noPreviewImage.classList.remove('d-none');
+                    }
+                });
+            }
+        });
+
+        function clearImage() {
+            if (confirm('Are you sure you want to remove the current image?')) {
+                document.getElementById('ImageUrl').value = '';
+                document.querySelector('input[name="ImageFile"]').value = '';
+                document.getElementById('previewImg').classList.add('d-none');
+                document.getElementById('noPreviewImage').classList.remove('d-none');
+            }
+        }
+
+        function resetForm() {
+            if (confirm('Are you sure you want to reset all changes?')) {
+                location.reload();
+            }
+        }
+
+        // Form submission validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const categorySelect = document.getElementById('CategoryId');
+            if (!categorySelect.value) {
+                e.preventDefault();
+                alert('Please select a category');
+                categorySelect.focus();
+                return false;
+            }
+        });
+    </script>
 }

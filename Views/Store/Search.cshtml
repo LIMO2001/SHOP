@@ -1,0 +1,561 @@
+@model List<LaptopStore.Models.Product>
+@{
+    ViewData["Title"] = "Search Results";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Store")">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Search Results</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-2">
+                        <i class="fas fa-search me-2 text-primary"></i>Search Results
+                    </h1>
+                    @if (!string.IsNullOrEmpty(ViewBag.SearchQuery))
+                    {
+                        <p class="text-muted mb-0">
+                            Showing results for: <strong>"@ViewBag.SearchQuery"</strong>
+                        </p>
+                    }
+                </div>
+                <div class="text-muted">
+                    <span id="resultsCount">@Model.Count</span> product(s) found
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Box -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="get" asp-action="Search" class="row g-3 align-items-center">
+                        <div class="col-md-10">
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" name="query" class="form-control form-control-lg" 
+                                       placeholder="Search for laptops, processors, RAM, storage..." 
+                                       value="@ViewBag.SearchQuery" required>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-search me-1"></i>Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Price Range Filter -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Price Range</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="number" class="form-control form-control-sm" placeholder="Min" id="minPrice">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" class="form-control form-control-sm" placeholder="Max" id="maxPrice">
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm w-100 mt-2" onclick="applyPriceFilter()">
+                            Apply Price
+                        </button>
+                    </div>
+
+                    <!-- Processor Filter -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Processor</h6>
+                        <div class="form-check">
+                            <input class="form-check-input processor-filter" type="checkbox" value="Intel" id="processorIntel">
+                            <label class="form-check-label" for="processorIntel">Intel</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input processor-filter" type="checkbox" value="AMD" id="processorAMD">
+                            <label class="form-check-label" for="processorAMD">AMD</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input processor-filter" type="checkbox" value="Apple" id="processorApple">
+                            <label class="form-check-label" for="processorApple">Apple M-series</label>
+                        </div>
+                    </div>
+
+                    <!-- RAM Filter -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">RAM</h6>
+                        <div class="form-check">
+                            <input class="form-check-input ram-filter" type="checkbox" value="8" id="ram8">
+                            <label class="form-check-label" for="ram8">8GB</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input ram-filter" type="checkbox" value="16" id="ram16">
+                            <label class="form-check-label" for="ram16">16GB</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input ram-filter" type="checkbox" value="32" id="ram32">
+                            <label class="form-check-label" for="ram32">32GB</label>
+                        </div>
+                    </div>
+
+                    <!-- Storage Filter -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Storage</h6>
+                        <div class="form-check">
+                            <input class="form-check-input storage-filter" type="checkbox" value="256" id="storage256">
+                            <label class="form-check-label" for="storage256">256GB</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input storage-filter" type="checkbox" value="512" id="storage512">
+                            <label class="form-check-label" for="storage512">512GB</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input storage-filter" type="checkbox" value="1000" id="storage1TB">
+                            <label class="form-check-label" for="storage1TB">1TB</label>
+                        </div>
+                    </div>
+
+                    <!-- Clear Filters -->
+                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters()">
+                        <i class="fas fa-times me-1"></i>Clear All Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Categories -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Categories</h5>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.Categories != null)
+                    {
+                        foreach (var category in ViewBag.Categories)
+                        {
+                            <a href="@Url.Action("Category", "Store", new { id = category.Id })" 
+                               class="d-block text-decoration-none text-dark mb-2 p-2 rounded hover-bg">
+                                <i class="fas fa-laptop me-2 text-primary"></i>@category.Name
+                                <span class="badge bg-secondary float-end">@category.Products.Count</span>
+                            </a>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            <!-- Sort and View Options -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <span class="me-2">Sort by:</span>
+                                <select class="form-select form-select-sm" style="width: auto;" onchange="sortProducts(this.value)">
+                                    <option value="newest">Newest First</option>
+                                    <option value="price-low">Price: Low to High</option>
+                                    <option value="price-high">Price: High to Low</option>
+                                    <option value="name">Name: A to Z</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-primary active" onclick="setViewMode('grid')">
+                                    <i class="fas fa-th"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="setViewMode('list')">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Grid/List -->
+            <div id="productsContainer">
+                @if (Model.Any())
+                {
+                    <div class="row" id="productsGrid">
+                        @foreach (var product in Model)
+                        {
+                            <div class="col-xl-3 col-lg-4 col-md-6 mb-4 product-item" 
+                                 data-price="@product.Price" 
+                                 data-processor="@product.Processor"
+                                 data-ram="@product.RAM"
+                                 data-storage="@product.Storage"
+                                 data-created="@product.CreatedAt.Ticks">
+                                <div class="card product-card h-100">
+                                    @if (product.IsFeatured)
+                                    {
+                                        <div class="featured-badge">Featured</div>
+                                    }
+                                    <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" 
+                                         style="height: 200px; object-fit: cover;">
+                                    <div class="card-body">
+                                        <h5 class="card-title">@product.Name</h5>
+                                        <p class="card-text text-muted small mb-2">
+                                            <i class="fas fa-microchip me-1"></i>@product.Processor
+                                        </p>
+                                        <p class="card-text text-muted small mb-2">
+                                            <i class="fas fa-memory me-1"></i>@product.RAM
+                                        </p>
+                                        <p class="card-text text-muted small mb-3">
+                                            <i class="fas fa-hdd me-1"></i>@product.Storage
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="price text-primary fw-bold">$@product.Price.ToString("N2")</span>
+                                            <span class="badge @(product.StockQuantity > 0 ? "bg-success" : "bg-danger")">
+                                                @(product.StockQuantity > 0 ? "In Stock" : "Out of Stock")
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <div class="d-grid gap-2">
+                                            <a href="@Url.Action("ProductDetails", "Store", new { id = product.Id })" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye me-1"></i>View Details
+                                            </a>
+                                            @if (product.StockQuantity > 0)
+                                            {
+                                                <button class="btn btn-primary btn-sm add-to-cart" 
+                                                        data-product-id="@product.Id"
+                                                        data-product-name="@product.Name">
+                                                    <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-outline-secondary btn-sm" disabled>
+                                                    <i class="fas fa-bell me-1"></i>Notify Me
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <!-- No Results -->
+                    <div class="text-center py-5">
+                        <div class="empty-state">
+                            <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                            <h3 class="text-muted">No products found</h3>
+                            <p class="text-muted mb-4">
+                                @if (!string.IsNullOrEmpty(ViewBag.SearchQuery))
+                                {
+                                    <text>We couldn't find any products matching "<strong>@ViewBag.SearchQuery</strong>"</text>
+                                }
+                                else
+                                {
+                                    <text>Please try a different search term or browse our categories.</text>
+                                }
+                            </p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="@Url.Action("Index", "Store")" class="btn btn-primary">
+                                    <i class="fas fa-home me-1"></i>Back to Home
+                                </a>
+                                <button class="btn btn-outline-primary" onclick="clearSearch()">
+                                    <i class="fas fa-times me-1"></i>Clear Search
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Load More Button (for future pagination) -->
+            @if (Model.Count >= 12)
+            {
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-primary" id="loadMoreBtn">
+                        <i class="fas fa-spinner fa-spin me-1 d-none"></i>
+                        Load More Products
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .hover-bg:hover {
+            background-color: #f8f9fa;
+        }
+
+        .product-card {
+            transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .featured-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(45deg, #ffc107, #ff8c00);
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .empty-state {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .list-view .col-xl-3 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .list-view .product-card {
+            flex-direction: row;
+            height: auto;
+        }
+
+        .list-view .product-card img {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .list-view .card-body {
+            flex: 1;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        let currentViewMode = 'grid';
+        let allProducts = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Store all products for filtering
+            allProducts = Array.from(document.querySelectorAll('.product-item'));
+            
+            // Add to cart functionality
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = this.dataset.productId;
+                    const productName = this.dataset.productName;
+                    addToCart(productId, productName);
+                });
+            });
+        });
+
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            const container = document.getElementById('productsContainer');
+            const gridButtons = document.querySelectorAll('.btn-group .btn');
+            
+            gridButtons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (mode === 'list') {
+                container.classList.add('list-view');
+            } else {
+                container.classList.remove('list-view');
+            }
+        }
+
+        function sortProducts(sortBy) {
+            const container = document.getElementById('productsGrid');
+            const products = Array.from(container.querySelectorAll('.product-item'));
+            
+            products.sort((a, b) => {
+                switch (sortBy) {
+                    case 'price-low':
+                        return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                    case 'price-high':
+                        return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                    case 'name':
+                        return a.querySelector('.card-title').textContent.localeCompare(b.querySelector('.card-title').textContent);
+                    case 'newest':
+                    default:
+                        return parseInt(b.dataset.created) - parseInt(a.dataset.created);
+                }
+            });
+            
+            // Re-append sorted products
+            products.forEach(product => container.appendChild(product));
+        }
+
+        function applyPriceFilter() {
+            const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
+            const maxPrice = parseFloat(document.getElementById('maxPrice').value) || Number.MAX_SAFE_INTEGER;
+            
+            filterProducts();
+        }
+
+        function filterProducts() {
+            const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
+            const maxPrice = parseFloat(document.getElementById('maxPrice').value) || Number.MAX_SAFE_INTEGER;
+            const selectedProcessors = getSelectedValues('.processor-filter');
+            const selectedRAM = getSelectedValues('.ram-filter');
+            const selectedStorage = getSelectedValues('.storage-filter');
+            
+            let visibleCount = 0;
+            
+            allProducts.forEach(product => {
+                const price = parseFloat(product.dataset.price);
+                const processor = product.dataset.processor;
+                const ram = product.dataset.ram;
+                const storage = product.dataset.storage;
+                
+                const priceMatch = price >= minPrice && price <= maxPrice;
+                const processorMatch = selectedProcessors.length === 0 || selectedProcessors.some(p => processor && processor.toLowerCase().includes(p.toLowerCase()));
+                const ramMatch = selectedRAM.length === 0 || selectedRAM.some(r => ram && ram.includes(r));
+                const storageMatch = selectedStorage.length === 0 || selectedStorage.some(s => storage && storage.includes(s));
+                
+                if (priceMatch && processorMatch && ramMatch && storageMatch) {
+                    product.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('resultsCount').textContent = visibleCount;
+            
+            // Show no results message if needed
+            if (visibleCount === 0) {
+                showNoResultsMessage();
+            }
+        }
+
+        function getSelectedValues(selector) {
+            const checked = document.querySelectorAll(`${selector}:checked`);
+            return Array.from(checked).map(input => input.value);
+        }
+
+        function clearFilters() {
+            // Clear all checkboxes
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Clear price inputs
+            document.getElementById('minPrice').value = '';
+            document.getElementById('maxPrice').value = '';
+            
+            // Reset filters
+            filterProducts();
+        }
+
+        function clearSearch() {
+            window.location.href = '@Url.Action("Index", "Store")';
+        }
+
+        function showNoResultsMessage() {
+            const container = document.getElementById('productsContainer');
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="fas fa-filter fa-4x text-muted mb-3"></i>
+                        <h3 class="text-muted">No products match your filters</h3>
+                        <p class="text-muted mb-4">
+                            Try adjusting your filters to see more results.
+                        </p>
+                        <button class="btn btn-primary" onclick="clearFilters()">
+                            <i class="fas fa-times me-1"></i>Clear Filters
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function addToCart(productId, productName) {
+            try {
+                const response = await fetch('@Url.Action("AddToCart", "Cart")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        productId: parseInt(productId),
+                        quantity: 1
+                    })
+                });
+                
+                if (response.ok) {
+                    showToast('Success', `${productName} added to cart!`, 'success');
+                    // Update cart count in header if you have one
+                    updateCartCount();
+                } else {
+                    showToast('Error', 'Failed to add product to cart', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                showToast('Error', 'An error occurred while adding to cart', 'error');
+            }
+        }
+
+        function showToast(title, message, type) {
+            // Simple toast notification
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+            toast.innerHTML = `
+                <strong>${title}</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(toast);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function updateCartCount() {
+            // Update cart count in header if you have a cart badge
+            const cartBadge = document.querySelector('.cart-count-badge');
+            if (cartBadge) {
+                const currentCount = parseInt(cartBadge.textContent) || 0;
+                cartBadge.textContent = currentCount + 1;
+            }
+        }
+
+        // Initialize filters
+        document.querySelectorAll('.processor-filter, .ram-filter, .storage-filter').forEach(checkbox => {
+            checkbox.addEventListener('change', filterProducts);
+        });
+    </script>
+}

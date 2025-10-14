@@ -1,3 +1,4 @@
+@using LaptopStore.Models
 @model List<CartItem>
 @{
     ViewData["Title"] = "Shopping Cart";
@@ -37,7 +38,7 @@
                                             <button type="submit" name="quantity" value="@(item.Quantity + 1)" class="btn btn-sm btn-outline-secondary">+</button>
                                         </form>
                                     </div>
-                                    <p class="h5">$@(item.Product.Price * item.Quantity)</p>
+                                    <p class="h5">$@((item.Product.Price * item.Quantity).ToString("F2"))</p>
                                     <form method="post" action="@Url.Action("RemoveFromCart", "Cart")">
                                         <input type="hidden" name="cartItemId" value="@item.Id" />
                                         <button type="submit" class="btn btn-danger btn-sm">Remove</button>
@@ -52,7 +53,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Order Summary</h5>
-                        <p class="h4 text-primary">Total: $@ViewBag.CartTotal</p>
+                        <p class="h4 text-primary">Total: $@ViewBag.CartTotal?.ToString("F2")</p>
                         <a href="@Url.Action("Checkout", "Cart")" class="btn btn-success btn-lg w-100">Proceed to Checkout</a>
                     </div>
                 </div>

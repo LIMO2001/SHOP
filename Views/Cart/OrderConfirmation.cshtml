@@ -1,0 +1,81 @@
+@model LaptopStore.Models.Order
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h2 class="mb-0"><i class="fas fa-check-circle me-2"></i>Order Confirmed!</h2>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-receipt fa-4x text-success mb-3"></i>
+                        <h3>Thank you for your order!</h3>
+                        <p class="lead">Your order has been placed successfully.</p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Order Details</h5>
+                            <p><strong>Order Number:</strong> @Model.OrderNumber</p>
+                            <p><strong>Order Date:</strong> @Model.OrderDate.ToString("MMMM dd, yyyy")</p>
+                            <p><strong>Status:</strong> <span class="badge bg-info">@Model.Status</span></p>
+                            <p><strong>Total Amount:</strong> $@Model.TotalAmount.ToString("F2")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Shipping Information</h5>
+                            <p><strong>Shipping Address:</strong><br>@Model.ShippingAddress</p>
+                            <p><strong>Payment Method:</strong> @Model.PaymentMethod</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Order Items</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.OrderItems)
+                                    {
+                                        <tr>
+                                            <td>@item.Product.Name</td>
+                                            <td>@item.Quantity</td>
+                                            <td>$@item.UnitPrice.ToString("F2")</td>
+                                            <td>$@((item.UnitPrice * item.Quantity).ToString("F2"))</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-success">
+                                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                        <td><strong>$@Model.TotalAmount.ToString("F2")</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="@Url.Action("DownloadReceipt", "Cart", new { id = Model.Id })" 
+                           class="btn btn-primary me-md-2">
+                            <i class="fas fa-download me-1"></i>Download Receipt
+                        </a>
+                        <a href="@Url.Action("Index", "Store")" class="btn btn-success">
+                            <i class="fas fa-shopping-bag me-1"></i>Continue Shopping
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

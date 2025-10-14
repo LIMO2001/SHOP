@@ -8,19 +8,35 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+/* FIXED: Separate focus styles to prevent form submission issues */
+.btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+/* Separate rule for buttons that doesn't interfere with form submission */
+.btn:focus {
+  outline: 2px solid #258cfb;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* FIX: Remove body margin and use flexbox for proper footer placement */
+html, body {
+  height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
 }
-/* Login and Register Page Styles */
+
+main {
+  flex: 1;
+}
+
+/* Rest of your existing styles remain the same */
 .card {
     border: none;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
@@ -40,6 +56,7 @@ body {
     border-radius: 0.5rem;
     font-weight: 600;
     transition: all 0.3s ease;
+    position: relative; /* Ensure proper stacking */
 }
 
 .btn:hover {
@@ -59,24 +76,20 @@ body {
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
-/* Gradient backgrounds */
 .gradient-bg {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* Alert styles */
 .alert {
     border-radius: 0.5rem;
     border: none;
 }
 
-/* Progress bar for password strength */
 .password-strength .progress {
     height: 8px;
     border-radius: 4px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .card-body {
         padding: 1.5rem;
@@ -85,4 +98,15 @@ body {
     .card-header {
         padding: 1.5rem 1.5rem 1rem;
     }
+}
+
+/* Ensure form buttons work properly */
+button[type="submit"] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Fix for any potential button disabling issues */
+.btn:not(:disabled) {
+    cursor: pointer;
 }

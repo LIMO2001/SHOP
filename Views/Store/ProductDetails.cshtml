@@ -28,7 +28,7 @@
                     <p class="text-muted">@Model.Category?.Name</p>
                     
                     <div class="mb-3">
-                        <span class="h2 text-primary">$@Model.Price</span>
+                        <span class="h2 text-primary">$@Model.Price.ToString("N2")</span>
                         <span class="badge @(Model.StockQuantity > 0 ? "bg-success" : "bg-danger") ms-2">
                             @(Model.StockQuantity > 0 ? "In Stock" : "Out of Stock")
                         </span>
@@ -72,22 +72,23 @@
                     <!-- Add to Cart -->
                     @if (Model.StockQuantity > 0)
                     {
-                        <form method="post" action="@Url.Action("AddToCart", "Cart")" class="mb-3">
-                            <input type="hidden" name="productId" value="@Model.Id" />
+                        <div class="mb-3" id="addToCartSection">
                             <div class="row align-items-center">
                                 <div class="col-auto">
                                     <label for="quantity" class="form-label">Quantity:</label>
                                 </div>
                                 <div class="col-auto">
-                                    <input type="number" name="quantity" value="1" min="1" max="@Model.StockQuantity" class="form-control" style="width: 80px;">
+                                    <input type="number" id="quantity" value="1" min="1" max="@Model.StockQuantity" class="form-control" style="width: 80px;">
                                 </div>
                                 <div class="col">
-                                    <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <button type="button" class="btn btn-success btn-lg w-100 add-to-cart" 
+                                            data-product-id="@Model.Id"
+                                            data-product-name="@Model.Name">
                                         <i class="fas fa-cart-plus me-2"></i>Add to Cart
                                     </button>
                                 </div>
                             </div>
-                        </form>
+                        </div>
                     }
                     else
                     {
@@ -116,15 +117,36 @@
                     @foreach (var product in (List<Product>)ViewBag.RelatedProducts)
                     {
                         <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-                            <div class="card h-100">
+                            <div class="card h-100 product-card">
                                 <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: cover;">
                                 <div class="card-body d-flex flex-column">
                                     <h6 class="card-title">@product.Name</h6>
+                                    <p class="card-text flex-grow-1">
+                                        <small class="text-muted">
+                                            <i class="fas fa-microchip me-1"></i>@product.Processor
+                                        </small>
+                                    </p>
                                     <div class="mt-auto">
-                                        <p class="h5 text-primary mb-2">$@product.Price</p>
-                                        <a href="@Url.Action("ProductDetails", "Store", new { id = product.Id })" class="btn btn-outline-primary btn-sm w-100">
-                                            View Details
-                                        </a>
+                                        <p class="h5 text-primary mb-2">$@product.Price.ToString("N2")</p>
+                                        <div class="d-grid gap-2">
+                                            <a href="@Url.Action("ProductDetails", "Store", new { id = product.Id })" class="btn btn-outline-primary btn-sm">
+                                                View Details
+                                            </a>
+                                            @if (product.StockQuantity > 0)
+                                            {
+                                                <button class="btn btn-primary btn-sm add-to-cart" 
+                                                        data-product-id="@product.Id"
+                                                        data-product-name="@product.Name">
+                                                    <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-outline-secondary btn-sm" disabled>
+                                                    <i class="fas fa-bell me-1"></i>Notify Me
+                                                </button>
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -135,3 +157,103 @@
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        // Add to Cart functionality for main product
+        document.addEventListener('DOMContentLoaded', function() {
+            // Main product add to cart
+            const mainAddToCartBtn = document.querySelector('#addToCartSection .add-to-cart');
+            if (mainAddToCartBtn) {
+                mainAddToCartBtn.addEventListener('click', function() {
+                    const productId = this.dataset.productId;
+                    const productName = this.dataset.productName;
+                    const quantity = document.getElementById('quantity').value;
+                    addToCart(productId, productName, quantity, this);
+                });
+            }
+
+            // Related products add to cart
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                if (button !== mainAddToCartBtn) {
+                    button.addEventListener('click', function() {
+                        const productId = this.dataset.productId;
+                        const productName = this.dataset.productName;
+                        addToCart(productId, productName, 1, this);
+                    });
+                }
+            });
+        });
+
+        // Generic add to cart function
+        async function addToCart(productId, productName, quantity, button) {
+            // Show loading state
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding...';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch('/Cart/AddToCart?productId=' + productId + '&quantity=' + quantity, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        // Update cart count in navigation
+                        $('#cartCount').text(result.cartCount);
+                        
+                        // Show success message
+                        showToast('Success', result.message, 'success');
+                        
+                        // Update button to show success
+                        button.innerHTML = '<i class="fas fa-check me-1"></i>Added!';
+                        setTimeout(() => {
+                            button.innerHTML = originalText;
+                            button.disabled = false;
+                        }, 2000);
+                    } else {
+                        showToast('Error', 'Failed to add product to cart', 'error');
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }
+                } else {
+                    showToast('Error', 'Failed to add product to cart', 'error');
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                showToast('Error', 'Error adding product to cart', 'error');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // Toast notification function
+        function showToast(title, message, type) {
+            // Remove existing toasts
+            document.querySelectorAll('.alert.position-fixed').forEach(toast => toast.remove());
+            
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+            toast.innerHTML = `
+                <strong>${title}</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(toast);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 3000);
+        }
+    </script>
+}
