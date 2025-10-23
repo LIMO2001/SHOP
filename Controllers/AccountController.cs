@@ -35,9 +35,6 @@ namespace LaptopStore.Controllers
         {
             ViewData["ReturnUrl"] = returnUrl;
 
-            // Add debug logging
-            Console.WriteLine($"🔐 LOGIN ATTEMPT: {model.Email}");
-
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -47,20 +44,14 @@ namespace LaptopStore.Controllers
             
             if (user == null)
             {
-                Console.WriteLine($" USER NOT FOUND: {model.Email}");
                 ModelState.AddModelError("", "Invalid email or password");
                 return View(model);
             }
 
-            Console.WriteLine($"✅ USER FOUND: {user.Email}, Role: {user.Role}");
-            Console.WriteLine($"🔑 PASSWORD HASH: {user.PasswordHash}");
-
             bool passwordValid = VerifyPassword(model.Password, user.PasswordHash);
-            Console.WriteLine($"🔑 PASSWORD VALID: {passwordValid}");
 
             if (!passwordValid)
             {
-                Console.WriteLine($"❌ PASSWORD INVALID for user: {user.Email}");
                 ModelState.AddModelError("", "Invalid email or password");
                 return View(model);
             }
@@ -70,8 +61,6 @@ namespace LaptopStore.Controllers
                 ModelState.AddModelError("", "Account is deactivated. Please contact support.");
                 return View(model);
             }
-
-            Console.WriteLine($"✅ LOGIN SUCCESSFUL: {user.Email}");
 
             // Generate JWT token
             var token = _jwtService.GenerateToken(user);
@@ -185,255 +174,19 @@ namespace LaptopStore.Controllers
             return View();
         }
 
-        // ========== DEBUG METHODS ==========
-
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> DebugAdminLogin()
-        {
-            var testEmail = "admin@laptopstore.com";
-            var testPassword = "Admin123!";
-            
-            Console.WriteLine($"🔍 DEBUG LOGIN: {testEmail}");
-
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == testEmail);
-            
-            if (user == null)
-            {
-                var allUsers = await _context.Users.Select(u => new { u.Email, u.Role }).ToListAsync();
-                return Json(new { 
-                    success = false, 
-                    message = "❌ ADMIN USER NOT FOUND",
-                    email = testEmail,
-                    allUsers = allUsers
-                });
-            }
-
-            // Test password verification
-            var passwordMatch = VerifyPassword(testPassword, user.PasswordHash);
-            var newlyHashedPassword = HashPassword(testPassword);
-            
-            return Json(new {
-                success = passwordMatch,
-                message = passwordMatch ? "✅ PASSWORD MATCHES" : "❌ PASSWORD DOES NOT MATCH",
-                userFound = true,
-                userEmail = user.Email,
-                userRole = user.Role,
-                userActive = user.IsActive,
-                storedHash = user.PasswordHash,
-                newlyGeneratedHash = newlyHashedPassword,
-                hashesMatch = (user.PasswordHash == newlyHashedPassword),
-                testPassword = testPassword,
-                verificationResult = passwordMatch
-            });
-        }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> ResetAdminPassword()
-        {
-            var adminEmail = "admin@laptopstore.com";
-            
-            Console.WriteLine($"🔄 RESETTING ADMIN PASSWORD: {adminEmail}");
-
-            // Delete existing admin if exists
-            var existingAdmin = await _context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
-            if (existingAdmin != null)
-            {
-                _context.Users.Remove(existingAdmin);
-                await _context.SaveChangesAsync();
-                Console.WriteLine($"🗑️ REMOVED EXISTING ADMIN: {adminEmail}");
-            }
-
-            // Create new admin with fresh password hash
-            var adminUser = new User
-            {
-                FirstName = "Admin",
-                LastName = "User",
-                Email = adminEmail,
-                PasswordHash = HashPassword("Admin123!"),
-                Role = "Admin",
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
-
-            _context.Users.Add(adminUser);
-            await _context.SaveChangesAsync();
-
-            Console.WriteLine($"✅ CREATED NEW ADMIN: {adminEmail}");
-
-            return Json(new {
-                success = true,
-                message = "🔄 ADMIN PASSWORD RESET COMPLETE",
-                email = adminEmail,
-                password = "Admin123!",
-                newHash = adminUser.PasswordHash
-            });
-        }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> CheckAllUsers()
-        {
-            var users = await _context.Users
-                .Select(u => new { 
-                    u.Id, 
-                    u.Email, 
-                    u.Role, 
-                    PasswordHashLength = u.PasswordHash.Length,
-                    u.IsActive,
-                    u.CreatedAt 
-                })
-                .ToListAsync();
-                
-            return Json(new {
-                totalUsers = users.Count,
-                adminUsers = users.Count(u => u.Role == "Admin"),
-                users = users
-            });
-        }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> TestPasswordHash()
-        {
-            var testPassword = "Admin123!";
-            var hash1 = HashPassword(testPassword);
-            var hash2 = HashPassword(testPassword);
-            
-            var verify1 = VerifyPassword(testPassword, hash1);
-            var verify2 = VerifyPassword(testPassword, hash2);
-            
-            return Json(new {
-                testPassword = testPassword,
-                hash1 = hash1,
-                hash2 = hash2,
-                hashesEqual = (hash1 == hash2),
-                verify1 = verify1,
-                verify2 = verify2,
-                hash1Length = hash1.Length,
-                hash2Length = hash2.Length
-            });
-        }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult TestBcryptImplementation()
-        {
-            var testPasswords = new[] { "Admin123!", "admin123", "password" };
-            var results = new List<object>();
-
-            foreach (var password in testPasswords)
-            {
-                var hash = BCrypt.Net.BCrypt.EnhancedHashPassword(password, 11);
-                var verifyEnhanced = BCrypt.Net.BCrypt.EnhancedVerify(password, hash);
-                var verifyRegular = BCrypt.Net.BCrypt.Verify(password, hash);
-                
-                results.Add(new
-                {
-                    password = password,
-                    hash = hash,
-                    hashLength = hash.Length,
-                    verifyEnhanced = verifyEnhanced,
-                    verifyRegular = verifyRegular,
-                    bothWork = verifyEnhanced && verifyRegular
-                });
-            }
-
-            return Json(new { 
-                message = "BCrypt Implementation Test",
-                results = results 
-            });
-        }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> CreateVerifiedAdmin()
-        {
-            var adminEmail = "admin@laptopstore.com";
-            var adminPassword = "Admin123!";
-            
-            // Delete existing admin if exists
-            var existingAdmin = await _context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
-            if (existingAdmin != null)
-            {
-                _context.Users.Remove(existingAdmin);
-                await _context.SaveChangesAsync();
-            }
-
-            // Use a pre-verified hash that definitely works
-            var verifiedHash = "$2a$11$veMSB/l.SJ5.5HnrwJ.1.eucI.uS0bw2Bz7pRoN2u.z.I5P2dL8Ym";
-            
-            var adminUser = new User
-            {
-                FirstName = "Admin",
-                LastName = "User",
-                Email = adminEmail,
-                PasswordHash = verifiedHash,
-                Role = "Admin",
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
-
-            _context.Users.Add(adminUser);
-            await _context.SaveChangesAsync();
-
-            // Verify the password works
-            var verificationResult = BCrypt.Net.BCrypt.Verify(adminPassword, verifiedHash);
-
-            return Json(new {
-                success = true,
-                message = "✅ VERIFIED ADMIN CREATED",
-                email = adminEmail,
-                password = adminPassword,
-                hash = verifiedHash,
-                verificationTest = verificationResult
-            });
-        }
-
         private string HashPassword(string password)
         {
-            try
-            {
-                // Use consistent work factor and ensure proper salt generation
-                string hash = BCrypt.Net.BCrypt.EnhancedHashPassword(password, 11);
-                Console.WriteLine($"🔐 HASHED PASSWORD: {hash}");
-                Console.WriteLine($"🔐 HASH LENGTH: {hash.Length}");
-                return hash;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ HASHING ERROR: {ex.Message}");
-                throw;
-            }
+            return BCrypt.Net.BCrypt.EnhancedHashPassword(password, 11);
         }
 
         private bool VerifyPassword(string password, string passwordHash)
         {
             try
             {
-                Console.WriteLine($"🔍 VERIFYING PASSWORD:");
-                Console.WriteLine($"   Input: {password}");
-                Console.WriteLine($"   Hash:  {passwordHash}");
-                Console.WriteLine($"   Hash Length: {passwordHash.Length}");
-                
-                // Use enhanced verification first
-                bool result = BCrypt.Net.BCrypt.EnhancedVerify(password, passwordHash);
-                Console.WriteLine($"   Enhanced Verify Result: {result}");
-                
-                if (!result)
-                {
-                    // Also try regular verification as fallback
-                    bool regularResult = BCrypt.Net.BCrypt.Verify(password, passwordHash);
-                    Console.WriteLine($"   Regular Verify Result: {regularResult}");
-                    result = regularResult;
-                }
-                
-                return result;
+                return BCrypt.Net.BCrypt.EnhancedVerify(password, passwordHash);
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"❌ VERIFICATION ERROR: {ex.Message}");
                 return false;
             }
         }

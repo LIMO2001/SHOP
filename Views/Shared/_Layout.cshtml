@@ -16,6 +16,7 @@
     
     <!-- Custom CSS -->
     <link href="~/css/site.css" rel="stylesheet" />
+    <link href="~/css/chatbot.css" rel="stylesheet" asp-append-version="true" />
     
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -318,14 +319,46 @@
         </div>
     </footer>
 
+    <!-- Chatbot Widget -->
+    <div id="chatbotWidget" class="chatbot-widget" style="display: none;">
+        <div class="chatbot-header">
+            <h6>💬 LaptopStore Assistant</h6>
+            <button id="chatbotClose" class="btn btn-sm btn-link text-light">×</button>
+        </div>
+        <div id="chatbotMessages" class="chatbot-messages">
+            <div class="chatbot-message bot-message">
+                <div class="message-content">
+                    Hello! I'm your LaptopStore assistant. How can I help you today?
+                </div>
+                <div class="message-time">Just now</div>
+            </div>
+        </div>
+        <div id="chatbotSuggestions" class="chatbot-suggestions">
+            <button class="suggestion-btn" data-message="What laptops do you have?">Browse laptops</button>
+            <button class="suggestion-btn" data-message="Show me gaming laptops">Gaming laptops</button>
+            <button class="suggestion-btn" data-message="Need technical support">Get help</button>
+        </div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbotInput" placeholder="Type your message..." maxlength="500">
+            <button id="chatbotSend" class="btn btn-primary">Send</button>
+        </div>
+    </div>
+
+    <button id="chatbotToggle" class="chatbot-toggle-btn">
+        💬
+    </button>
+
     <!-- Back to Top Button -->
-    <button id="backToTop" class="btn btn-primary rounded-circle shadow" style="position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; display: none;">
+    <button id="backToTop" class="btn btn-primary rounded-circle shadow" style="position: fixed; bottom: 80px; right: 20px; width: 50px; height: 50px; display: none; z-index: 999;">
         <i class="fas fa-chevron-up"></i>
     </button>
 
     <!-- Bootstrap & jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chatbot JavaScript -->
+    <script src="~/js/chatbot.js" asp-append-version="true"></script>
     
     <!-- Custom JavaScript -->
     <script>

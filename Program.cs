@@ -79,6 +79,7 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<ReceiptService>(); // ADDED: PDF Receipt Service
+builder.Services.AddScoped<IChatbotService, ChatbotService>(); // ADDED: Chatbot Service
 
 // Authorization Policies
 builder.Services.AddAuthorization(options =>
@@ -120,7 +121,12 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Store}/{action=Index}/{id?}");
 
-// Ensure database is created
+// Chatbot API Routes
+app.MapControllerRoute(
+    name: "chatbot",
+    pattern: "api/{controller=Chatbot}/{action=Index}/{id?}");
+
+
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

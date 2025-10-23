@@ -1,0 +1,62 @@
+@model LaptopStore.Models.Order
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receipt - Order #@Model.Id</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .receipt { max-width: 400px; margin: 0 auto; }
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .item { margin: 10px 0; }
+        .total { border-top: 1px solid #000; padding-top: 10px; font-weight: bold; }
+        .footer { text-align: center; margin-top: 20px; font-style: italic; }
+        .no-print { display: block; margin-top: 20px; text-align: center; }
+
+        @@media print {
+            .no-print { display: none; }
+            body { margin: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt">
+        <div class="header">
+            <h2>DKL EMPIRE LaptopStore</h2>
+            <p>Order Receipt</p>
+        </div>
+        
+        <div class="details">
+            <p><strong>Order #:</strong> @Model.Id</p>
+            <p><strong>Date:</strong> @Model.OrderDate.ToString("f")</p>
+            <p><strong>Customer:</strong> @Model.User.FirstName @Model.User.LastName</p>
+            <p><strong>Shipping:</strong> @Model.ShippingAddress</p>
+            <p><strong>Payment:</strong> @Model.PaymentMethod</p>
+        </div>
+        
+        <div class="items">
+            <h4>Items:</h4>
+            @foreach (var item in Model.OrderItems)
+            {
+                <div class="item">
+                    <p>@item.Product.Name x @item.Quantity</p>
+                    <p>@item.UnitPrice.ToString("C") each = @((item.Quantity * item.UnitPrice).ToString("C"))</p>
+                </div>
+            }
+        </div>
+        
+        <div class="total">
+            <p><strong>Total Amount: @Model.TotalAmount.ToString("C")</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for your business!</p>
+        </div>
+    </div>
+    
+    <div class="no-print">
+        <button onclick="window.print()" class="btn btn-primary">Print Receipt</button>
+        <a href="@Url.Action("OrderConfirmation", new { orderId = Model.Id })" class="btn btn-secondary">Back to Order</a>
+    </div>
+</body>
+</html>

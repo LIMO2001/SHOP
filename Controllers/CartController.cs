@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LaptopStore.Controllers
 {
-    // Remove authorization temporarily for testing
+    // Disable auth temporarily for local testing
     // [Authorize(Roles = "Customer")]
     public class CartController : Controller
     {
@@ -22,61 +22,52 @@ namespace LaptopStore.Controllers
             _receiptService = receiptService;
         }
 
+        // -------------------------
+        // Utility: Get UserId
+        // -------------------------
         private int GetUserId()
         {
-            // For testing, use a fixed user ID
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue)
             {
-                userId = 1; // Default user ID for testing
+                // Default for local test — avoid null user errors
+                userId = 1;
                 HttpContext.Session.SetInt32("UserId", userId.Value);
             }
             return userId.Value;
         }
 
+        // -------------------------
+        // CART ACTIONS
+        // -------------------------
         public async Task<IActionResult> Index()
         {
             var userId = GetUserId();
             var cartItems = await _cartService.GetCartItemsAsync(userId);
-            var total = await _cartService.GetCartTotalAsync(userId);
-            
-            ViewBag.CartTotal = total;
+            ViewBag.CartTotal = await _cartService.GetCartTotalAsync(userId);
             return View(cartItems);
         }
 
         [HttpPost]
         public async Task<IActionResult> AddToCart(int productId, int quantity = 1)
         {
-            try
+            var userId = GetUserId();
+            var result = await _cartService.AddToCartAsync(userId, productId, quantity);
+
+            if (result != null)
             {
-                var userId = GetUserId();
-                var result = await _cartService.AddToCartAsync(userId, productId, quantity);
-                
-                if (result != null)
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 {
-                    // For AJAX requests, return JSON with cart count
-                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    {
-                        var cartCount = await _cartService.GetCartItemCountAsync(userId);
-                        return Json(new { 
-                            success = true, 
-                            message = "Product added to cart successfully!",
-                            cartCount = cartCount
-                        });
-                    }
-                    
-                    TempData["Success"] = "Product added to cart successfully!";
+                    var count = await _cartService.GetCartItemCountAsync(userId);
+                    return Json(new { success = true, message = "Added successfully!", cartCount = count });
                 }
-                else
-                {
-                    TempData["Error"] = "Failed to add product to cart.";
-                }
+                TempData["Success"] = "Product added successfully!";
             }
-            catch (Exception ex)
+            else
             {
-                TempData["Error"] = "Error adding product to cart: " + ex.Message;
+                TempData["Error"] = "Failed to add product to cart.";
             }
-            
+
             return RedirectToAction("Index");
         }
 
@@ -84,17 +75,11 @@ namespace LaptopStore.Controllers
         public async Task<IActionResult> UpdateQuantity(int cartItemId, int quantity)
         {
             var userId = GetUserId();
-            var success = await _cartService.UpdateCartItemQuantityAsync(userId, cartItemId, quantity);
-            
-            if (success)
-            {
-                TempData["Success"] = "Cart updated successfully!";
-            }
+            if (await _cartService.UpdateCartItemQuantityAsync(userId, cartItemId, quantity))
+                TempData["Success"] = "Cart updated!";
             else
-            {
-                TempData["Error"] = "Failed to update cart item.";
-            }
-            
+                TempData["Error"] = "Failed to update item.";
+
             return RedirectToAction("Index");
         }
 
@@ -103,27 +88,14 @@ namespace LaptopStore.Controllers
         {
             var userId = GetUserId();
             var success = await _cartService.RemoveFromCartAsync(userId, cartItemId);
-            
-            if (success)
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
-                // For AJAX requests, return JSON with cart count
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                {
-                    var cartCount = await _cartService.GetCartItemCountAsync(userId);
-                    return Json(new { 
-                        success = true, 
-                        message = "Product removed from cart successfully!",
-                        cartCount = cartCount
-                    });
-                }
-                
-                TempData["Success"] = "Product removed from cart successfully!";
+                var count = await _cartService.GetCartItemCountAsync(userId);
+                return Json(new { success, message = success ? "Removed!" : "Failed to remove!", cartCount = count });
             }
-            else
-            {
-                TempData["Error"] = "Failed to remove product from cart.";
-            }
-            
+
+            TempData[success ? "Success" : "Error"] = success ? "Removed from cart!" : "Failed to remove!";
             return RedirectToAction("Index");
         }
 
@@ -131,35 +103,27 @@ namespace LaptopStore.Controllers
         public async Task<JsonResult> GetCartCount()
         {
             var userId = GetUserId();
-            var cartCount = await _cartService.GetCartItemCountAsync(userId);
-            return Json(cartCount);
+            var count = await _cartService.GetCartItemCountAsync(userId);
+            return Json(count);
         }
 
+        // -------------------------
+        // CHECKOUT
+        // -------------------------
         [HttpGet]
         public async Task<IActionResult> Checkout()
         {
             var userId = GetUserId();
-            
-            // Check if cart has items
-            var cartItems = await _cartService.GetCartItemsAsync(userId);
-            if (!cartItems.Any())
+            var items = await _cartService.GetCartItemsAsync(userId);
+            if (!items.Any())
             {
-                TempData["Error"] = "Your cart is empty";
+                TempData["Error"] = "Your cart is empty.";
                 return RedirectToAction("Index");
             }
 
-            // Create a new Order object for the checkout form
-            var order = new Order
-            {
-                UserId = userId
-            };
-
-            // Pass cart total to view
-            var total = await _cartService.GetCartTotalAsync(userId);
-            ViewBag.CartTotal = total;
-            ViewBag.CartItems = cartItems;
-
-            return View(order);
+            ViewBag.CartItems = items;
+            ViewBag.CartTotal = await _cartService.GetCartTotalAsync(userId);
+            return View(new Order { UserId = userId });
         }
 
         [HttpPost]
@@ -168,120 +132,82 @@ namespace LaptopStore.Controllers
         {
             var userId = GetUserId();
 
-            // ADD DEBUG LOGGING
-            Console.WriteLine("=== CHECKOUT POST STARTED ===");
-            Console.WriteLine($"ModelState.IsValid: {ModelState.IsValid}");
-            Console.WriteLine($"ShippingAddress: {order?.ShippingAddress}");
-            Console.WriteLine($"PaymentMethod: {paymentMethod}");
-            Console.WriteLine($"UserId: {userId}");
-
-            if (!ModelState.IsValid)
+            try
             {
-                Console.WriteLine("=== MODELSTATE ERRORS ===");
-                foreach (var state in ModelState)
+                var cartItems = await _cartService.GetCartItemsAsync(userId);
+                if (!cartItems.Any())
                 {
-                    foreach (var error in state.Value.Errors)
-                    {
-                        Console.WriteLine($"{state.Key}: {error.ErrorMessage}");
-                    }
+                    TempData["Error"] = "Your cart is empty.";
+                    return RedirectToAction("Index");
                 }
-            }
 
-            if (ModelState.IsValid)
+                var totalAmount = cartItems.Sum(c => c.Quantity * (c.Product?.Price ?? 0));
+
+                var newOrder = new Order
+                {
+                    UserId = userId,
+                    ShippingAddress = order.ShippingAddress,
+                    PaymentMethod = paymentMethod,
+                    TotalAmount = totalAmount,
+                    Status = "Completed",
+                    OrderDate = DateTime.UtcNow,
+                    OrderNumber = Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
+                    OrderItems = new List<OrderItem>()
+                };
+
+                // Add order items
+                foreach (var item in cartItems)
+                {
+                    newOrder.OrderItems.Add(new OrderItem
+                    {
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.Product?.Price ?? 0,
+                        ProductName = item.Product?.Name ?? "Unknown Product"
+                    });
+                }
+
+                _context.Orders.Add(newOrder);
+                await _context.SaveChangesAsync();
+
+                await _cartService.ClearCartAsync(userId);
+
+                TempData["Success"] = $"Order #{newOrder.OrderNumber} placed successfully!";
+                return RedirectToAction("OrderConfirmation", new { id = newOrder.Id });
+            }
+            catch (Exception ex)
             {
-                try
-                {
-                    // Get cart items
-                    var cartItems = await _cartService.GetCartItemsAsync(userId);
-                    Console.WriteLine($"Cart items count: {cartItems.Count}");
-                    
-                    if (!cartItems.Any())
-                    {
-                        TempData["Error"] = "Your cart is empty";
-                        return RedirectToAction("Index");
-                    }
-
-                    // Calculate total amount
-                    var totalAmount = cartItems.Sum(ci => ci.Quantity * ci.Product?.Price ?? 0);
-                    Console.WriteLine($"Total amount: {totalAmount}");
-
-                    // Create the order
-                    var newOrder = new Order
-                    {
-                        UserId = userId,
-                        ShippingAddress = order.ShippingAddress,
-                        PaymentMethod = paymentMethod,
-                        TotalAmount = totalAmount,
-                        Status = "Completed",
-                        OrderDate = DateTime.UtcNow,
-                        OrderNumber = Guid.NewGuid().ToString().Substring(0, 8).ToUpper()
-                    };
-
-                    // Add order items WITH PRODUCT NAME
-                    foreach (var cartItem in cartItems)
-                    {
-                        newOrder.OrderItems.Add(new OrderItem
-                        {
-                            ProductId = cartItem.ProductId,
-                            Quantity = cartItem.Quantity,
-                            UnitPrice = cartItem.Product?.Price ?? 0,
-                            ProductName = cartItem.Product?.Name ?? "Unknown Product"
-                        });
-                    }
-
-                    // Save order to database
-                    _context.Orders.Add(newOrder);
-                    await _context.SaveChangesAsync();
-
-                    Console.WriteLine($"=== ORDER CREATED: {newOrder.OrderNumber} ===");
-
-                    // Clear the cart
-                    await _cartService.ClearCartAsync(userId);
-
-                    TempData["Success"] = $"Order #{newOrder.OrderNumber} placed successfully!";
-                    return RedirectToAction("OrderConfirmation", new { id = newOrder.Id });
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error creating order: {ex.Message}");
-                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                    TempData["Error"] = "Error placing order. Please try again.";
-                }
+                Console.WriteLine($"Checkout error: {ex.Message}");
+                TempData["Error"] = "An error occurred while placing your order.";
+                return RedirectToAction("Checkout");
             }
-
-            // If we got here, something went wrong
-            Console.WriteLine("=== CHECKOUT FAILED ===");
-            var cartItemsForView = await _cartService.GetCartItemsAsync(userId);
-            var total = await _cartService.GetCartTotalAsync(userId);
-            ViewBag.CartTotal = total;
-            ViewBag.CartItems = cartItemsForView;
-
-            return View(order);
         }
 
+        // -------------------------
+        // ORDER CONFIRMATION
+        // -------------------------
         [HttpGet]
         public async Task<IActionResult> OrderConfirmation(int id)
         {
             var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
+                .Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
                 .Include(o => o.User)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
-            {
                 return NotFound();
-            }
 
             return View(order);
         }
 
+        // -------------------------
+        // RECEIPT DOWNLOAD
+        // -------------------------
         [HttpGet]
         public async Task<IActionResult> DownloadReceipt(int id)
         {
             var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
+                .Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
                 .Include(o => o.User)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
@@ -293,24 +219,30 @@ namespace LaptopStore.Controllers
 
             try
             {
-                var pdfBytes = _receiptService.GenerateReceipt(order, order.OrderItems.ToList(), order.User);
+                var user = order.User ?? await _context.Users.FindAsync(order.UserId);
+                var items = order.OrderItems?.ToList() ?? new List<OrderItem>();
+
+                var pdfBytes = _receiptService.GenerateReceipt(order, items, user);
                 return File(pdfBytes, "application/pdf", $"Receipt-{order.OrderNumber}.pdf");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error generating PDF: {ex.Message}");
-                TempData["Error"] = "Error generating receipt. Please try again.";
+                Console.WriteLine($"Receipt generation error: {ex.Message}");
+                TempData["Error"] = "Failed to generate receipt. Please try again.";
                 return RedirectToAction("OrderConfirmation", new { id });
             }
         }
 
+        // -------------------------
+        // CART SUMMARY (AJAX)
+        // -------------------------
         [HttpGet]
         public async Task<JsonResult> GetCartSummary()
         {
             var userId = GetUserId();
             var cartItems = await _cartService.GetCartItemsAsync(userId);
             var subtotal = await _cartService.GetCartTotalAsync(userId);
-            
+
             var shipping = subtotal > 0 ? 10.00m : 0.00m;
             var tax = subtotal * 0.08m;
             var total = subtotal + shipping + tax;
@@ -325,14 +257,7 @@ namespace LaptopStore.Controllers
                 imageUrl = ci.Product?.ImageUrl ?? "/images/default-laptop.jpg"
             }).ToList();
 
-            return Json(new
-            {
-                items,
-                subtotal,
-                shipping,
-                tax,
-                total
-            });
+            return Json(new { items, subtotal, shipping, tax, total });
         }
     }
 }
