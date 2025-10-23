@@ -75,9 +75,21 @@ OrderDetails
 Each product includes details like name, price, description, image, stock quantity, specs, and category.
 
 🖼️ Screenshots
-Home Page	Product Details	Admin Dashboard
+Home Page	Product Details	
+<img width="959" height="476" alt="image" src="https://github.com/user-attachments/assets/e5614779-740c-4c1d-b8fd-035a350a50c4" />
 
-	
+Login
+<img width="956" height="473" alt="image" src="https://github.com/user-attachments/assets/11a8f60e-b2c2-49bc-818c-7d04ca37af5d" />
+
+
+
+
+
+Admin Dashboard
+<img width="959" height="475" alt="image" src="https://github.com/user-attachments/assets/d2e34d55-9d6c-48cc-a536-e12619370f1d" />
+
+<img width="950" height="474" alt="image" src="https://github.com/user-attachments/assets/be0427c7-0a0f-408f-a399-25a72fb10a29" />
+
 	
 🪄 Extras
 
