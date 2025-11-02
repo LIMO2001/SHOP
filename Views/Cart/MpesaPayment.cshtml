@@ -1,0 +1,167 @@
+@{
+    ViewData["Title"] = "M-Pesa Payment";
+    var order = ViewBag.Order as LaptopStore.Models.Order;
+}
+
+<div class="container mt-4">
+    <h2>M-Pesa Payment</h2>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Order Number:</strong> @order?.OrderNumber</p>
+                    <p><strong>Total Amount:</strong> KSh @order?.TotalAmount.ToString("N2")</p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>Enter M-Pesa Details</h5>
+                </div>
+                <div class="card-body">
+                    <form id="mpesaForm">
+                        <div class="mb-3">
+                            <label for="phoneNumber" class="form-label">M-Pesa Phone Number</label>
+                            <input type="tel" class="form-control" id="phoneNumber" 
+                                   placeholder="e.g., 0712345678" required>
+                            <div class="form-text">Enter your M-Pesa registered phone number</div>
+                        </div>
+                        
+                        <input type="hidden" id="orderId" value="@order?.Id">
+                        
+                        <button type="submit" class="btn btn-primary" id="payButton">
+                            Pay with M-Pesa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Payment Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>Enter your M-Pesa registered phone number</li>
+                        <li>Click "Pay with M-Pesa"</li>
+                        <li>Check your phone for M-Pesa prompt</li>
+                        <li>Enter your M-Pesa PIN when prompted</li>
+                        <li>Wait for payment confirmation</li>
+                    </ol>
+                    
+                    <div id="paymentStatus" class="mt-3" style="display: none;">
+                        <div class="alert alert-info">
+                            <strong>Processing payment...</strong>
+                            <div class="spinner-border spinner-border-sm ms-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('mpesaForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const orderId = document.getElementById('orderId').value;
+            const payButton = document.getElementById('payButton');
+            const paymentStatus = document.getElementById('paymentStatus');
+            
+            if (!phoneNumber) {
+                alert('Please enter your phone number');
+                return;
+            }
+
+            // Show processing
+            payButton.disabled = true;
+            payButton.textContent = 'Processing...';
+            paymentStatus.style.display = 'block';
+
+            try {
+const response = await fetch('/Cart/ProcessMpesaPayment', {                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: phoneNumber,
+                        amount: @order?.TotalAmount,
+                        orderId: orderId,
+                        accountReference: 'LaptopStore',
+                        transactionDescription: 'Laptop Purchase'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Start polling for payment status
+                    await checkPaymentStatus(result.checkoutRequestId, orderId);
+                } else {
+                    alert('Payment failed: ' + result.message);
+                    resetForm();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while processing payment');
+                resetForm();
+            }
+
+            function resetForm() {
+                payButton.disabled = false;
+                payButton.textContent = 'Pay with M-Pesa';
+                paymentStatus.style.display = 'none';
+            }
+
+            async function checkPaymentStatus(checkoutRequestId, orderId) {
+                const maxAttempts = 30; // 2.5 minutes (5 seconds * 30)
+                let attempts = 0;
+
+                const checkStatus = async () => {
+                    attempts++;
+                    
+                    try {
+                        const response = await fetch(`/api/mpesa/payment-status/${checkoutRequestId}`);
+                        const result = await response.json();
+
+                        if (result.success && result.paymentStatus === 'Completed') {
+                            // Payment successful
+                            window.location.href = `/Cart/OrderConfirmation/${orderId}`;
+                        } else if (result.success && result.paymentStatus === 'Failed') {
+                            alert('Payment failed. Please try again.');
+                            resetForm();
+                        } else if (attempts >= maxAttempts) {
+                            alert('Payment timeout. Please check your phone and try again.');
+                            resetForm();
+                        } else {
+                            // Continue polling
+                            setTimeout(checkStatus, 5000);
+                        }
+                    } catch (error) {
+                        console.error('Error checking payment status:', error);
+                        if (attempts >= maxAttempts) {
+                            alert('Error checking payment status. Please contact support.');
+                            resetForm();
+                        } else {
+                            setTimeout(checkStatus, 5000);
+                        }
+                    }
+                };
+
+                // Start polling
+                await checkStatus();
+            }
+        });
+    </script>
+}

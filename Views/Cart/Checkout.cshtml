@@ -16,7 +16,8 @@
                         <i class="fas fa-shopping-cart me-2 text-success"></i>Secure Checkout
                     </h2>
 
-                    <form asp-controller="Cart" asp-action="Checkout" method="post">
+                    <!-- Regular Checkout Form -->
+                    <form asp-controller="Cart" asp-action="Checkout" method="post" id="checkoutForm">
                         @Html.AntiForgeryToken()
 
                         <!-- Shipping Address -->
@@ -25,6 +26,15 @@
                             <textarea asp-for="ShippingAddress" class="form-control" rows="3"
                                       placeholder="Enter your complete shipping address" required></textarea>
                             <span asp-validation-for="ShippingAddress" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Phone Number (for M-Pesa) -->
+                        <div class="mb-3" id="phoneNumberField" style="display: none;">
+                            <label for="phoneNumber" class="form-label fw-semibold">M-Pesa Phone Number *</label>
+                            <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" 
+                                   placeholder="07XXXXXXXX" pattern="[0-9]{10,12}">
+                            <div class="form-text">We'll send an M-Pesa prompt to this number</div>
+                            <span id="phoneNumberError" class="text-danger small" style="display: none;">Please enter a valid phone number (10-12 digits)</span>
                         </div>
 
                         <!-- Payment Method -->
@@ -36,16 +46,41 @@
                                 <div class="mb-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="Credit Card" checked>
-                                        <label class="form-check-label" for="creditCard">Credit/Debit Card</label>
+                                        <label class="form-check-label" for="creditCard">
+                                            <i class="fas fa-credit-card me-2 text-primary"></i>Credit/Debit Card
+                                        </label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="PayPal">
-                                        <label class="form-check-label" for="paypal">PayPal</label>
+                                        <label class="form-check-label" for="paypal">
+                                            <i class="fab fa-paypal me-2 text-primary"></i>PayPal
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="mpesa" value="M-Pesa">
+                                        <label class="form-check-label" for="mpesa">
+                                            <i class="fas fa-mobile-alt me-2 text-success"></i>M-Pesa
+                                            <span class="badge bg-success ms-2">Popular</span>
+                                        </label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="Cash on Delivery">
-                                        <label class="form-check-label" for="cod">Cash on Delivery</label>
+                                        <label class="form-check-label" for="cod">
+                                            <i class="fas fa-money-bill-wave me-2 text-warning"></i>Cash on Delivery
+                                        </label>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Order Summary -->
+                        <div class="card border-0 bg-light mt-4">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">
+                                    <i class="fas fa-receipt me-2"></i>Order Summary
+                                </h5>
+                                <div id="orderSummary">
+                                    <!-- Order summary will be loaded here -->
                                 </div>
                             </div>
                         </div>
@@ -54,7 +89,7 @@
                         <div class="form-check mt-4">
                             <input class="form-check-input" type="checkbox" id="termsAgreement" required>
                             <label class="form-check-label" for="termsAgreement">
-                                I agree to the Terms and Conditions *
+                                I agree to the <a href="@Url.Action("Terms", "Home")" target="_blank">Terms and Conditions</a> *
                             </label>
                         </div>
 
@@ -63,8 +98,11 @@
                             <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-secondary me-md-2">
                                 <i class="fas fa-arrow-left me-1"></i>Back to Cart
                             </a>
-                            <button type="submit" class="btn btn-success btn-lg">
+                            <button type="submit" class="btn btn-success btn-lg" id="placeOrderBtn">
                                 <i class="fas fa-lock me-1"></i>Place Order
+                            </button>
+                            <button type="button" class="btn btn-primary btn-lg" id="payWithMpesaBtn" style="display: none;">
+                                <i class="fas fa-mobile-alt me-1"></i>Pay with M-Pesa
                             </button>
                         </div>
                     </form>
@@ -75,17 +113,346 @@
     </div>
 </div>
 
+<!-- M-Pesa Payment Modal -->
+<div class="modal fade" id="mpesaModal" tabindex="-1" aria-labelledby="mpesaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="mpesaModalLabel">
+                    <i class="fas fa-mobile-alt me-2"></i>M-Pesa Payment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-shopping-cart fa-3x text-primary mb-3"></i>
+                    <h5>Complete Your Payment</h5>
+                    <p class="text-muted mb-3">
+                        You will receive an M-Pesa prompt on your phone shortly.
+                        Please enter your M-Pesa PIN to complete the payment.
+                    </p>
+                </div>
+
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="card-title">Payment Details</h6>
+                        <div class="text-center">
+                            <h4 class="text-success mb-2" id="modalAmount">KSh 0.00</h4>
+                            <p class="mb-1">Phone: <span id="modalPhoneNumber"></span></p>
+                            <p class="mb-0">Order: #<span id="modalOrderNumber"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="paymentStatus" class="mb-4">
+                    <div class="spinner-border text-primary mb-3" role="status" id="paymentSpinner">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h6 id="paymentMessage">Initiating payment...</h6>
+                    <small class="text-muted" id="paymentDetails">
+                        Please wait while we process your payment
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="checkPaymentStatus()">
+                    <i class="fas fa-sync me-1"></i>Check Status
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <!-- jQuery Validation -->
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        // Optional: confirm before placing order
-        document.querySelector("form").addEventListener("submit", function (e) {
-            const confirmOrder = confirm("Are you sure you want to place this order?");
-            if (!confirmOrder) {
+        let checkoutRequestID = '';
+        let orderId = 0;
+        let paymentCheckInterval;
+
+        // Load order summary
+        $(document).ready(function() {
+            loadOrderSummary();
+            
+            // Payment method change handler
+            $('input[name="paymentMethod"]').change(function() {
+                togglePaymentFields();
+            });
+            
+            // M-Pesa payment button click
+            $('#payWithMpesaBtn').click(function() {
+                initiateMpesaPayment();
+            });
+
+            // Real-time phone number validation
+            $('#phoneNumber').on('input', function() {
+                validatePhoneNumber();
+            });
+        });
+
+        function loadOrderSummary() {
+            $.get('/Cart/GetCartSummary', function(data) {
+                let summaryHtml = `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>KSh ${data.subtotal.toLocaleString()}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping:</span>
+                        <span>KSh ${data.shipping.toLocaleString()}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax (8%):</span>
+                        <span>KSh ${data.tax.toLocaleString()}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total:</span>
+                        <span>KSh ${data.total.toLocaleString()}</span>
+                    </div>
+                `;
+                $('#orderSummary').html(summaryHtml);
+                
+                // Update modal amount
+                $('#modalAmount').text('KSh ' + data.total.toLocaleString());
+            }).fail(function() {
+                $('#orderSummary').html('<div class="text-danger">Failed to load order summary. Please refresh the page.</div>');
+            });
+        }
+
+        function togglePaymentFields() {
+            const selectedMethod = $('input[name="paymentMethod"]:checked').val();
+            const phoneField = $('#phoneNumberField');
+            const placeOrderBtn = $('#placeOrderBtn');
+            const mpesaBtn = $('#payWithMpesaBtn');
+
+            if (selectedMethod === 'M-Pesa') {
+                phoneField.slideDown(300);
+                placeOrderBtn.hide();
+                mpesaBtn.show();
+                $('#phoneNumber').prop('required', true);
+            } else {
+                phoneField.slideUp(300);
+                placeOrderBtn.show();
+                mpesaBtn.hide();
+                $('#phoneNumber').prop('required', false);
+                $('#phoneNumberError').hide();
+            }
+        }
+
+        function validatePhoneNumber() {
+            const phoneNumber = $('#phoneNumber').val();
+            const phoneError = $('#phoneNumberError');
+            
+            if (phoneNumber && !phoneNumber.match(/^[0-9]{10,12}$/)) {
+                phoneError.show();
+                return false;
+            } else {
+                phoneError.hide();
+                return true;
+            }
+        }
+
+        function initiateMpesaPayment() {
+            const phoneNumber = $('#phoneNumber').val();
+            const shippingAddress = $('#ShippingAddress').val();
+            const termsAgreed = $('#termsAgreement').is(':checked');
+
+            // Validate inputs
+            if (!shippingAddress) {
+                showAlert('Please enter your shipping address', 'warning');
+                $('#ShippingAddress').focus();
+                return;
+            }
+
+            if (!phoneNumber) {
+                showAlert('Please enter your M-Pesa phone number', 'warning');
+                $('#phoneNumber').focus();
+                return;
+            }
+
+            if (!validatePhoneNumber()) {
+                showAlert('Please enter a valid phone number (10-12 digits)', 'warning');
+                $('#phoneNumber').focus();
+                return;
+            }
+
+            if (!termsAgreed) {
+                showAlert('Please agree to the Terms and Conditions', 'warning');
+                $('#termsAgreement').focus();
+                return;
+            }
+
+            // Show modal
+            $('#modalPhoneNumber').text(phoneNumber);
+            $('#mpesaModal').modal('show');
+            $('#paymentMessage').text('Initiating M-Pesa payment...');
+            $('#paymentDetails').text('Please wait while we process your payment');
+            $('#paymentSpinner').show();
+
+            // Get cart total and initiate payment
+            $.get('/Cart/GetCartSummary', function(data) {
+                const requestData = {
+                    phoneNumber: phoneNumber,
+                    shippingAddress: shippingAddress
+                };
+
+                $.ajax({
+                    url: '/Cart/CheckoutWithMpesa',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(requestData),
+                    success: function(response) {
+                        if (response.success) {
+                            checkoutRequestID = response.checkoutRequestID;
+                            orderId = response.orderId;
+                            
+                            $('#paymentMessage').text('Check your phone for M-Pesa prompt');
+                            $('#paymentDetails').text('Enter your M-Pesa PIN to complete payment');
+                            $('#modalOrderNumber').text(orderId);
+                            
+                            // Start polling for payment status
+                            startPaymentPolling();
+                        } else {
+                            $('#paymentMessage').text('Payment initiation failed');
+                            $('#paymentDetails').text(response.message);
+                            $('#paymentSpinner').hide();
+                            showAlert('Payment initiation failed: ' + response.message, 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $('#paymentMessage').text('Error initiating payment');
+                        $('#paymentDetails').text('Please try again or contact support');
+                        $('#paymentSpinner').hide();
+                        
+                        let errorMessage = 'An error occurred while initiating payment';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        showAlert(errorMessage, 'error');
+                        console.error('M-Pesa payment error:', error);
+                    }
+                });
+            }).fail(function() {
+                $('#mpesaModal').modal('hide');
+                showAlert('Failed to load order details. Please try again.', 'error');
+            });
+        }
+
+        function startPaymentPolling() {
+            paymentCheckInterval = setInterval(function() {
+                checkPaymentStatus();
+            }, 3000); // Check every 3 seconds
+        }
+
+        function checkPaymentStatus() {
+            if (!checkoutRequestID) return;
+
+            $.get('/Cart/CheckMpesaPaymentStatus?checkoutRequestId=' + checkoutRequestID, function(response) {
+                if (response.isPaid) {
+                    // Payment successful
+                    clearInterval(paymentCheckInterval);
+                    $('#paymentSpinner').hide();
+                    $('#paymentMessage').html('<span class="text-success">Payment Successful!</span>');
+                    $('#paymentDetails').text('Your order has been confirmed and is being processed.');
+                    
+                    // Close modal and redirect
+                    setTimeout(function() {
+                        $('#mpesaModal').modal('hide');
+                        window.location.href = '/Cart/OrderConfirmation/' + orderId;
+                    }, 2000);
+                }
+                // If not paid, continue polling (message remains the same)
+            }).fail(function() {
+                $('#paymentMessage').text('Error checking payment status');
+                $('#paymentDetails').text('Please try again or contact support.');
+            });
+        }
+
+        function showAlert(message, type) {
+            // Remove any existing alerts
+            $('.alert-dismissible').remove();
+            
+            const alertClass = type === 'error' ? 'danger' : type;
+            const alertHtml = `
+                <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert">
+                    <strong>${type === 'error' ? 'Error!' : 'Notice!'}</strong> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            $('.card-body').prepend(alertHtml);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(function() {
+                $('.alert-dismissible').alert('close');
+            }, 5000);
+        }
+
+        // Form validation for non-M-Pesa payments
+        document.getElementById("checkoutForm").addEventListener("submit", function (e) {
+            const selectedMethod = $('input[name="paymentMethod"]:checked').val();
+            const termsAgreed = $('#termsAgreement').is(':checked');
+            
+            if (!termsAgreed) {
                 e.preventDefault();
+                showAlert('Please agree to the Terms and Conditions', 'warning');
+                $('#termsAgreement').focus();
+                return;
+            }
+            
+            if (selectedMethod !== 'M-Pesa') {
+                const confirmOrder = confirm("Are you sure you want to place this order?");
+                if (!confirmOrder) {
+                    e.preventDefault();
+                }
+            } else {
+                e.preventDefault(); // M-Pesa uses the separate button
+            }
+        });
+
+        // Clean up interval when modal closes
+        $('#mpesaModal').on('hidden.bs.modal', function () {
+            if (paymentCheckInterval) {
+                clearInterval(paymentCheckInterval);
+            }
+        });
+
+        // Handle browser back button
+        window.addEventListener('beforeunload', function() {
+            if (paymentCheckInterval) {
+                clearInterval(paymentCheckInterval);
             }
         });
     </script>
+
+    <style>
+        .form-check-input:checked {
+            background-color: #198754;
+            border-color: #198754;
+        }
+        
+        .badge {
+            font-size: 0.7em;
+        }
+        
+        #phoneNumberField {
+            transition: all 0.3s ease;
+        }
+        
+        .alert {
+            border-radius: 10px;
+        }
+        
+        .btn {
+            border-radius: 8px;
+        }
+        
+        .form-control {
+            border-radius: 8px;
+        }
+    </style>
 }

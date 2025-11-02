@@ -1,0 +1,41 @@
+@model List<BlogPost>
+@{
+    ViewData["Title"] = "Blog";
+}
+
+<div class="container mt-4">
+    <h1>Our Blog</h1>
+    
+    @if (Model.Any())
+    {
+        foreach (var post in Model)
+        {
+            <div class="card mb-4">
+                @if (!string.IsNullOrEmpty(post.ImageUrl))
+                {
+                    <img src="@post.ImageUrl" class="card-img-top" alt="@post.Title">
+                }
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <a href="@Url.Action("Post", "Blog", new { slug = post.Slug })" class="text-decoration-none">
+                            @post.Title
+                        </a>
+                    </h2>
+                    <p class="text-muted">
+                        Posted by @post.Author on @post.DatePosted.ToString("MMMM dd, yyyy")
+                    </p>
+                    <p class="card-text">
+                        @Html.Raw(post.Content.Length > 500 ? post.Content.Substring(0, 500) + "..." : post.Content)
+                    </p>
+                    <a href="@Url.Action("Post", "Blog", new { slug = post.Slug })" class="btn btn-primary">Read More</a>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No blog posts available at the moment.
+        </div>
+    }
+</div>

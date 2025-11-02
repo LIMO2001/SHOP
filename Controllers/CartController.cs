@@ -14,12 +14,15 @@ namespace LaptopStore.Controllers
         private readonly CartService _cartService;
         private readonly ApplicationDbContext _context;
         private readonly ReceiptService _receiptService;
+        private readonly IMpesaService _mpesaService;
 
-        public CartController(CartService cartService, ApplicationDbContext context, ReceiptService receiptService)
+        public CartController(CartService cartService, ApplicationDbContext context, 
+                            ReceiptService receiptService, IMpesaService mpesaService)
         {
             _cartService = cartService;
             _context = context;
             _receiptService = receiptService;
+            _mpesaService = mpesaService;
         }
 
         // -------------------------
@@ -149,7 +152,7 @@ namespace LaptopStore.Controllers
                     ShippingAddress = order.ShippingAddress,
                     PaymentMethod = paymentMethod,
                     TotalAmount = totalAmount,
-                    Status = "Completed",
+                    Status = paymentMethod == "M-Pesa" ? "Pending Payment" : "Completed",
                     OrderDate = DateTime.UtcNow,
                     OrderNumber = Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
                     OrderItems = new List<OrderItem>()
@@ -170,6 +173,13 @@ namespace LaptopStore.Controllers
                 _context.Orders.Add(newOrder);
                 await _context.SaveChangesAsync();
 
+                // If M-Pesa payment, redirect to M-Pesa payment page
+                if (paymentMethod == "M-Pesa")
+                {
+                    return RedirectToAction("MpesaPayment", new { orderId = newOrder.Id });
+                }
+
+                // For other payment methods, complete order immediately
                 await _cartService.ClearCartAsync(userId);
 
                 TempData["Success"] = $"Order #{newOrder.OrderNumber} placed successfully!";
@@ -180,6 +190,244 @@ namespace LaptopStore.Controllers
                 Console.WriteLine($"Checkout error: {ex.Message}");
                 TempData["Error"] = "An error occurred while placing your order.";
                 return RedirectToAction("Checkout");
+            }
+        }
+
+        // -------------------------
+        // M-PESA PAYMENT PROCESSING
+        // -------------------------
+
+        [HttpPost]
+        public async Task<IActionResult> CheckoutWithMpesa([FromBody] MpesaCheckoutRequest request)
+        {
+            try
+            {
+                var userId = GetUserId();
+                
+                // Get cart items and calculate total
+                var cartItems = await _cartService.GetCartItemsAsync(userId);
+                if (!cartItems.Any())
+                    return BadRequest(new { Success = false, Message = "Cart is empty" });
+
+                var totalAmount = cartItems.Sum(ci => ci.Quantity * (ci.Product?.Price ?? 0));
+
+                // Create order
+                var order = new Order
+                {
+                    UserId = userId,
+                    TotalAmount = totalAmount,
+                    Status = "Pending Payment",
+                    OrderDate = DateTime.UtcNow,
+                    ShippingAddress = request.ShippingAddress,
+                    PaymentMethod = "M-Pesa",
+                    OrderNumber = Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
+                    OrderItems = new List<OrderItem>()
+                };
+
+                // Create order items
+                foreach (var cartItem in cartItems)
+                {
+                    var orderItem = new OrderItem
+                    {
+                        ProductId = cartItem.ProductId,
+                        Quantity = cartItem.Quantity,
+                        UnitPrice = cartItem.Product?.Price ?? 0,
+                        ProductName = cartItem.Product?.Name ?? "Unknown Product"
+                    };
+                    order.OrderItems.Add(orderItem);
+                }
+
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                // Initiate M-Pesa payment using ProcessMpesaPayment logic
+                var mpesaResponse = await _mpesaService.InitiateSTKPushAsync(
+                    request.PhoneNumber,
+                    totalAmount,
+                    $"ORDER_{order.Id}",
+                    $"Laptop Purchase - Order #{order.OrderNumber}"
+                );
+
+                if (mpesaResponse.Success)
+                {
+                    // Update order with payment reference
+                    order.PaymentReference = mpesaResponse.CheckoutRequestID;
+                    await _context.SaveChangesAsync();
+
+                    // Store in session for status checking
+                    HttpContext.Session.SetString("MpesaCheckoutRequestID", mpesaResponse.CheckoutRequestID);
+                    HttpContext.Session.SetInt32("PendingOrderId", order.Id);
+
+                    return Ok(new 
+                    { 
+                        Success = true, 
+                        OrderId = order.Id,
+                        CheckoutRequestID = mpesaResponse.CheckoutRequestID,
+                        Message = mpesaResponse.CustomerMessage
+                    });
+                }
+                else
+                {
+                    // If payment fails, mark order as failed
+                    order.Status = "Payment Failed";
+                    await _context.SaveChangesAsync();
+                    
+                    return BadRequest(new { Success = false, Message = mpesaResponse.Message });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"M-Pesa checkout error: {ex.Message}");
+                return StatusCode(500, new { Success = false, Message = "An error occurred during checkout" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ProcessMpesaPayment([FromBody] MpesaPaymentRequest request)
+        {
+            try
+            {
+                var userId = GetUserId();
+                
+                // Validate order exists and belongs to user
+                var order = await _context.Orders
+                    .FirstOrDefaultAsync(o => o.Id == request.OrderId && o.UserId == userId);
+                    
+                if (order == null)
+                {
+                    return BadRequest(new { Success = false, Message = "Order not found" });
+                }
+
+                // Validate order is in pending payment status
+                if (order.Status != "Pending Payment")
+                {
+                    return BadRequest(new { Success = false, Message = "Order payment already processed" });
+                }
+
+                // Initiate M-Pesa payment
+                var mpesaResponse = await _mpesaService.InitiateSTKPushAsync(
+                    request.PhoneNumber,
+                    request.Amount,
+                    request.AccountReference ?? $"ORDER_{request.OrderId}",
+                    request.TransactionDescription ?? "Laptop Purchase"
+                );
+
+                if (mpesaResponse.Success)
+                {
+                    // Update order with payment reference
+                    order.PaymentReference = mpesaResponse.CheckoutRequestID;
+                    await _context.SaveChangesAsync();
+
+                    // Store in session for status checking
+                    HttpContext.Session.SetString("MpesaCheckoutRequestID", mpesaResponse.CheckoutRequestID);
+                    HttpContext.Session.SetInt32("PendingOrderId", order.Id);
+
+                    return Ok(new 
+                    { 
+                        Success = true, 
+                        OrderId = order.Id,
+                        CheckoutRequestID = mpesaResponse.CheckoutRequestID,
+                        CustomerMessage = mpesaResponse.CustomerMessage,
+                        Message = "Payment initiated successfully"
+                    });
+                }
+                else
+                {
+                    return BadRequest(new { Success = false, Message = mpesaResponse.Message });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"M-Pesa processing error: {ex.Message}");
+                return StatusCode(500, new { Success = false, Message = "An error occurred while processing payment" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MpesaPayment(int orderId)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+            {
+                TempData["Error"] = "Order not found.";
+                return RedirectToAction("Index");
+            }
+
+            // Validate order belongs to current user
+            var userId = GetUserId();
+            if (order.UserId != userId)
+            {
+                TempData["Error"] = "Access denied.";
+                return RedirectToAction("Index");
+            }
+
+            ViewBag.Order = order;
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> CheckMpesaPaymentStatus(string checkoutRequestId)
+        {
+            try
+            {
+                var payment = await _mpesaService.GetPaymentByCheckoutIdAsync(checkoutRequestId);
+                
+                if (payment != null && payment.PaymentStatus == "Completed")
+                {
+                    // Get the pending order ID from session or payment record
+                    var orderId = HttpContext.Session.GetInt32("PendingOrderId") ?? payment.OrderId;
+                    if (orderId > 0)
+                    {
+                        var order = await _context.Orders.FindAsync(orderId);
+                        if (order != null && order.Status == "Pending Payment")
+                        {
+                            // Update order status and clear cart
+                            order.Status = "Completed";
+                            order.PaymentStatus = "Paid";
+                            order.PaymentDate = DateTime.UtcNow;
+                            order.MpesaReceiptNumber = payment.MpesaReceiptNumber;
+                            await _context.SaveChangesAsync();
+
+                            await _cartService.ClearCartAsync(GetUserId());
+
+                            // Clear session data
+                            HttpContext.Session.Remove("MpesaCheckoutRequestID");
+                            HttpContext.Session.Remove("PendingOrderId");
+
+                            return Json(new { 
+                                isPaid = true, 
+                                message = "Payment completed successfully!",
+                                receiptNumber = payment.MpesaReceiptNumber
+                            });
+                        }
+                    }
+                }
+                else if (payment != null && payment.PaymentStatus == "Failed")
+                {
+                    return Json(new { 
+                        isPaid = false, 
+                        message = "Payment failed. Please try again.",
+                        error = payment.ResultDescription
+                    });
+                }
+
+                return Json(new { 
+                    isPaid = false, 
+                    message = "Waiting for payment...",
+                    status = payment?.PaymentStatus ?? "Pending"
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Payment status check error: {ex.Message}");
+                return Json(new { 
+                    isPaid = false, 
+                    message = "Error checking payment status",
+                    error = ex.Message
+                });
             }
         }
 
@@ -196,6 +444,14 @@ namespace LaptopStore.Controllers
 
             if (order == null)
                 return NotFound();
+
+            // Validate order belongs to current user
+            var userId = GetUserId();
+            if (order.UserId != userId)
+            {
+                TempData["Error"] = "Access denied.";
+                return RedirectToAction("Index");
+            }
 
             return View(order);
         }
@@ -259,5 +515,12 @@ namespace LaptopStore.Controllers
 
             return Json(new { items, subtotal, shipping, tax, total });
         }
+    }
+
+    // M-Pesa Checkout Request Model
+    public class MpesaCheckoutRequest
+    {
+        public string PhoneNumber { get; set; }
+        public string ShippingAddress { get; set; }
     }
 }

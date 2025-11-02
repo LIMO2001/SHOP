@@ -15,6 +15,12 @@
             <a href="@Url.Action("Index", "CategoryManagement", new { area = "Admin" })" class="btn btn-success">
                 <i class="fas fa-tags me-1"></i>Manage Categories
             </a>
+            <a href="@Url.Action("Index", "BlogManagement", new { area = "Admin" })" class="btn btn-info">
+                <i class="fas fa-blog me-1"></i>Manage Blog
+            </a>
+            <a href="@Url.Action("Index", "CareerManagement", new { area = "Admin" })" class="btn btn-warning">
+                <i class="fas fa-briefcase me-1"></i>Manage Careers
+            </a>
         </div>
     </div>
 
@@ -66,6 +72,55 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Total Blog Posts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @ViewBag.TotalBlogPosts
+                            </div>
+                            <div class="text-xs text-muted">
+                                @ViewBag.PublishedBlogPosts Published
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-blog fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Total Careers
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @ViewBag.TotalCareers
+                            </div>
+                            <div class="text-xs text-muted">
+                                @ViewBag.ActiveCareers Active
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-briefcase fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row Statistics Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
                                 Total Users
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
@@ -99,12 +154,9 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Additional Stats Row -->
-    <div class="row">
         <!-- Total Revenue -->
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-danger shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -125,7 +177,7 @@
         </div>
 
         <!-- Low Stock Alert -->
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-warning shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -144,133 +196,126 @@
                 </div>
             </div>
         </div>
-
-        <!-- Recent Orders -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Recent Orders
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                @(ViewBag.RecentOrders?.Count ?? 0)
-                            </div>
-                            <div class="text-xs text-muted">Last 5 orders</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- Recent Orders & Low Stock Tables -->
+    <!-- Recent Content Section -->
     <div class="row">
-        <!-- Recent Orders Table -->
+        <!-- Recent Blog Posts -->
         <div class="col-lg-6 mb-4">
             <div class="card shadow">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-shopping-cart me-2"></i>Recent Orders
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-blog me-2"></i>Recent Blog Posts
                     </h6>
                 </div>
                 <div class="card-body">
-                    @if (ViewBag.RecentOrders != null && ViewBag.RecentOrders.Count > 0)
+                    @if (ViewBag.RecentBlogPosts != null && ViewBag.RecentBlogPosts.Count > 0)
                     {
                         <div class="table-responsive">
                             <table class="table table-sm table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Order #</th>
-                                        <th>Customer</th>
-                                        <th>Amount</th>
+                                        <th>Title</th>
+                                        <th>Author</th>
+                                        <th>Date</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var order in ViewBag.RecentOrders)
+                                    @foreach (var post in ViewBag.RecentBlogPosts)
                                     {
                                         <tr>
                                             <td>
-                                                <small class="text-muted">@order.OrderNumber</small>
+                                                <div class="fw-bold text-truncate" style="max-width: 200px;" title="@post.Title">
+                                                    @post.Title
+                                                </div>
                                             </td>
-                                            <td>@order.CustomerName</td>
-                                            <td>$@order.TotalAmount.ToString("N2")</td>
+                                            <td>@post.Author</td>
+                                            <td>@post.DatePosted.ToString("MMM dd, yyyy")</td>
                                             <td>
-                                                <span class="badge bg-@GetStatusBadgeClass(order.Status)">
-                                                    @order.Status
+                                                <span class="badge bg-@(post.IsPublished ? "success" : "warning")">
+                                                    @(post.IsPublished ? "Published" : "Draft")
                                                 </span>
                                             </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-shopping-cart fa-2x mb-3"></i>
-                            <p>No recent orders</p>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <!-- Low Stock Products Table -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alert
-                    </h6>
-                </div>
-                <div class="card-body">
-                    @if (ViewBag.LowStockProducts != null && ViewBag.LowStockProducts.Count > 0)
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th>Stock</th>
-                                        <th>Price</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var product in ViewBag.LowStockProducts)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <div class="fw-bold">@product.Name</div>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-@(product.StockQuantity <= 5 ? "danger" : "warning")">
-                                                    @product.StockQuantity left
-                                                </span>
-                                            </td>
-                                            <td>$@product.Price.ToString("N2")</td>
                                         </tr>
                                     }
                                 </tbody>
                             </table>
                         </div>
                         <div class="mt-3">
-                            <a href="@Url.Action("Index", "ProductManagement", new { area = "Admin" })" class="btn btn-warning btn-sm">
-                                <i class="fas fa-boxes me-1"></i>Manage Inventory
+                            <a href="@Url.Action("Index", "BlogManagement", new { area = "Admin" })" class="btn btn-info btn-sm">
+                                <i class="fas fa-blog me-1"></i>Manage Blog Posts
                             </a>
                         </div>
                     }
                     else
                     {
                         <div class="text-center text-muted py-4">
-                            <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
-                            <p>All products have sufficient stock</p>
+                            <i class="fas fa-blog fa-2x mb-3"></i>
+                            <p>No recent blog posts</p>
+                            <a href="@Url.Action("Create", "BlogManagement", new { area = "Admin" })" class="btn btn-info btn-sm mt-2">
+                                <i class="fas fa-plus me-1"></i>Create First Post
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Careers -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-briefcase me-2"></i>Recent Career Opportunities
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.RecentCareers != null && ViewBag.RecentCareers.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Position</th>
+                                        <th>Department</th>
+                                        <th>Deadline</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var career in ViewBag.RecentCareers)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold">@career.Title</div>
+                                            </td>
+                                            <td>@career.Department</td>
+                                            <td>@career.ApplicationDeadline.ToString("MMM dd, yyyy")</td>
+                                            <td>
+                                                <span class="badge bg-@(career.IsActive ? "success" : "secondary")">
+                                                    @(career.IsActive ? "Active" : "Inactive")
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <a href="@Url.Action("Index", "CareerManagement", new { area = "Admin" })" class="btn btn-warning btn-sm">
+                                <i class="fas fa-briefcase me-1"></i>Manage Careers
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-briefcase fa-2x mb-3"></i>
+                            <p>No recent career opportunities</p>
+                            <a href="@Url.Action("Create", "CareerManagement", new { area = "Admin" })" class="btn btn-warning btn-sm mt-2">
+                                <i class="fas fa-plus me-1"></i>Add Career Opportunity
+                            </a>
                         </div>
                     }
                 </div>
@@ -306,18 +351,18 @@
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="@Url.Action("Index", "ProductManagement", new { area = "Admin" })" class="btn btn-info btn-block h-100">
+                            <a href="@Url.Action("Create", "BlogManagement", new { area = "Admin" })" class="btn btn-info btn-block h-100">
                                 <div class="d-flex flex-column align-items-center">
-                                    <i class="fas fa-list fa-2x mb-2"></i>
-                                    <span>View All Products</span>
+                                    <i class="fas fa-edit fa-2x mb-2"></i>
+                                    <span>Write Blog Post</span>
                                 </div>
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="@Url.Action("Index", "Store")" class="btn btn-warning btn-block h-100" target="_blank">
+                            <a href="@Url.Action("Create", "CareerManagement", new { area = "Admin" })" class="btn btn-warning btn-block h-100">
                                 <div class="d-flex flex-column align-items-center">
-                                    <i class="fas fa-store fa-2x mb-2"></i>
-                                    <span>View Storefront</span>
+                                    <i class="fas fa-briefcase fa-2x mb-2"></i>
+                                    <span>Add Career</span>
                                 </div>
                             </a>
                         </div>
@@ -346,14 +391,8 @@
 
 @section Scripts {
     <script>
-        // You can add auto-refresh functionality here if needed
         $(document).ready(function() {
             console.log('Dashboard loaded successfully');
-            
-            // Auto-refresh every 30 seconds (optional)
-            // setInterval(() => {
-            //     location.reload();
-            // }, 30000);
         });
     </script>
 }

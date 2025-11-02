@@ -1,0 +1,123 @@
+@using LaptopStore.Models
+@model Career
+@{
+    ViewData["Title"] = "Edit Career Opportunity";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-edit me-2"></i>Edit Career Opportunity
+        </h1>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to List
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form asp-action="Edit">
+                <input type="hidden" asp-for="Id" />
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group mb-3">
+                            <label asp-for="Title" class="form-label">Job Title *</label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Department" class="form-label">Department *</label>
+                                    <input asp-for="Department" class="form-control" />
+                                    <span asp-validation-for="Department" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Location" class="form-label">Location *</label>
+                                    <input asp-for="Location" class="form-control" />
+                                    <span asp-validation-for="Location" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="form-label">Job Description *</label>
+                            <textarea asp-for="Description" class="form-control" rows="6"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Requirements" class="form-label">Requirements *</label>
+                            <textarea asp-for="Requirements" class="form-control" rows="6"></textarea>
+                            <span asp-validation-for="Requirements" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label asp-for="EmploymentType" class="form-label">Employment Type *</label>
+                            <select asp-for="EmploymentType" class="form-control">
+                                <option value="Full-time">Full-time</option>
+                                <option value="Part-time">Part-time</option>
+                                <option value="Contract">Contract</option>
+                                <option value="Internship">Internship</option>
+                                <option value="Remote">Remote</option>
+                            </select>
+                            <span asp-validation-for="EmploymentType" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="SalaryRangeMin" class="form-label">Salary Min (KSh)</label>
+                                    <input asp-for="SalaryRangeMin" type="number" class="form-control" />
+                                    <span asp-validation-for="SalaryRangeMin" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="SalaryRangeMax" class="form-label">Salary Max (KSh)</label>
+                                    <input asp-for="SalaryRangeMax" type="number" class="form-control" />
+                                    <span asp-validation-for="SalaryRangeMax" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="ApplicationDeadline" class="form-label">Application Deadline *</label>
+                            <input asp-for="ApplicationDeadline" type="date" class="form-control" />
+                            <span asp-validation-for="ApplicationDeadline" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label">Publish this career opportunity</label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-save me-1"></i>Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            const deadlineField = document.getElementById('ApplicationDeadline');
+            if (deadlineField) {
+                deadlineField.min = today;
+            }
+        });
+    </script>
+}

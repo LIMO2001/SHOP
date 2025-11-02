@@ -46,9 +46,9 @@
                             <i class="fas fa-th-large me-1"></i>Categories
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-gamepad me-2"></i>Gaming Laptops</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-briefcase me-2"></i>Business Laptops</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-graduation-cap me-2"></i>Student Laptops</a></li>
+                            <li><a class="dropdown-item" href="Home"><i class="fas fa-gamepad me-2"></i>Gaming Laptops</a></li>
+                            <li><a class="dropdown-item" href="Home"><i class="fas fa-briefcase me-2"></i>Business Laptops</a></li>
+                            <li><a class="dropdown-item" href="Home"><i class="fas fa-graduation-cap me-2"></i>Student Laptops</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="@Url.Action("Search", "Store")"><i class="fas fa-search me-2"></i>Browse All</a></li>
                         </ul>
@@ -59,7 +59,17 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="@Url.Action("Index", "Blog")">
+                            <i class="fas fa-blog me-1"></i>Blog
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Index", "Career")">
+                            <i class="fas fa-briefcase me-1"></i>Careers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="Dashboard">
                             <i class="fas fa-tag me-1"></i>Deals
                         </a>
                     </li>
@@ -83,7 +93,7 @@
                         </li>
                         
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="Store">
                                 <i class="fas fa-heart me-1"></i>Wishlist
                             </a>
                         </li>
@@ -122,6 +132,16 @@
                                     <li>
                                         <a class="dropdown-item" href="@Url.Action("Index", "CategoryManagement", new { area = "Admin" })">
                                             <i class="fas fa-tags me-2"></i>Categories
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("Index", "BlogManagement", new { area = "Admin" })">
+                                            <i class="fas fa-blog me-2"></i>Blog Management
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("Index", "CareerManagement", new { area = "Admin" })">
+                                            <i class="fas fa-briefcase me-2"></i>Career Management
                                         </a>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
@@ -241,11 +261,11 @@
                 <div class="col-lg-2 col-md-6">
                     <h6 class="fw-bold text-white mb-3">Shop</h6>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><a href="@Url.Action("Index", "Store")" class="text-light text-decoration-none hover-primary">All Products</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Gaming Laptops</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Business Laptops</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Student Laptops</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Latest Deals</a></li>
+                        <li class="mb-2"><a href="@Url.Action("Index", "Dashboard")" class="text-light text-decoration-none hover-primary">All Products</a></li>
+                        <li class="mb-2"><a href="Home" class="text-light text-decoration-none hover-primary">Gaming Laptops</a></li>
+                        <li class="mb-2"><a href="Home" class="text-light text-decoration-none hover-primary">Business Laptops</a></li>
+                        <li class="mb-2"><a href="Home" class="text-light text-decoration-none hover-primary">Student Laptops</a></li>
+                        <li class="mb-2"><a href="Dashboard" class="text-light text-decoration-none hover-primary">Latest Deals</a></li>
                     </ul>
                 </div>
 
@@ -253,11 +273,11 @@
                 <div class="col-lg-2 col-md-6">
                     <h6 class="fw-bold text-white mb-3">Support</h6>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Contact Us</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Shipping Info</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Returns & Refunds</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">FAQ</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Warranty</a></li>
+                        <li class="mb-2"><a href="@Url.Action("Contact", "Home")" class="text-light text-decoration-none hover-primary">Contact Us</a></li>
+                        <li class="mb-2"><a href="@Url.Action("Shipping", "Home")" class="text-light text-decoration-none hover-primary">Shipping Info</a></li>
+                        <li class="mb-2"><a href="@Url.Action("Returns", "Home")" class="text-light text-decoration-none hover-primary">Returns & Refunds</a></li>
+                        <li class="mb-2"><a href="@Url.Action("FAQ", "Home")" class="text-light text-decoration-none hover-primary">FAQ</a></li>
+                        <li class="mb-2"><a href="@Url.Action("Warranty", "Home")" class="text-light text-decoration-none hover-primary">Warranty</a></li>
                     </ul>
                 </div>
 
@@ -265,11 +285,11 @@
                 <div class="col-lg-2 col-md-6">
                     <h6 class="fw-bold text-white mb-3">Company</h6>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">About Us</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Careers</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Privacy Policy</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Terms of Service</a></li>
-                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-primary">Blog</a></li>
+                        <li class="mb-2"><a href="@Url.Action("About", "Home")" class="text-light text-decoration-none hover-primary">About Us</a></li>
+                        <li class="mb-2"><a href="@Url.Action("Index", "Career")" class="text-light text-decoration-none hover-primary">Careers</a></li>
+                        <li class="mb-2"><a href="@Url.Action("Privacy", "Home")" class="text-light text-decoration-none hover-primary">Privacy Policy</a></li>
+                        <li class="mb-2"><a href="@Url.Action("Terms", "Home")" class="text-light text-decoration-none hover-primary">Terms of Service</a></li>
+                        <li class="mb-2"><a href="@Url.Action("Index", "Blog")" class="text-light text-decoration-none hover-primary">Blog</a></li>
                     </ul>
                 </div>
 

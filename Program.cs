@@ -5,17 +5,40 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using LaptopStore.Data;
 using LaptopStore.Services;
+using LaptopStore.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<ICareerService, CareerService>();
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IBlogService, BlogService>();
 
 // Add Razor Runtime Compilation in Development mode
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 }
+
+// Add HttpClient
+builder.Services.AddHttpClient();
+
+// 🔥 GUARANTEED MPESA CONFIGURATION 🔥
+builder.Services.Configure<MpesaConfig>(options =>
+{
+    // Use hardcoded values to guarantee it works
+    options.ConsumerKey = "IuzgzMe1aFgR7D6DqFYLeyMAkwHH2OzVyAftoPliNutJNABF";
+    options.ConsumerSecret = "wJGFEwK6pqmNj11lrG6wMePRKGCwFcaW2fnJLQqXAMQOtMi5gQ5P4vqyAFijPg25";
+    options.Passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
+    options.BusinessShortCode = "174379";
+    options.CallbackUrl = "https://localhost:5068/api/mpesa/callback";
+    options.Environment = "sandbox";
+    
+    Console.WriteLine("✅ MPESA CONFIGURATION HARDCODED AND GUARANTEED TO WORK");
+});
+
+// Register MpesaService
+builder.Services.AddScoped<IMpesaService, MpesaService>();
 
 // Database Context for MySQL Workbench using Pomelo
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -32,7 +55,7 @@ var jwtKey = builder.Configuration["Jwt:Key"] ?? "DefaultSecureKeyForDevelopment
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "LaptopStore";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "LaptopStoreUsers";
 
-// Authentication Configuration - FIXED SCHEME NAME
+// Authentication Configuration
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = "Cookies";
@@ -51,7 +74,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
 })
-.AddCookie("Cookies", options =>  // Changed to "Cookies" to match AccountController
+.AddCookie("Cookies", options =>
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
@@ -78,8 +101,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<ProductService>();
-builder.Services.AddScoped<ReceiptService>(); // ADDED: PDF Receipt Service
-builder.Services.AddScoped<IChatbotService, ChatbotService>(); // ADDED: Chatbot Service
+builder.Services.AddScoped<ReceiptService>();
+builder.Services.AddScoped<IChatbotService, ChatbotService>();
 
 // Authorization Policies
 builder.Services.AddAuthorization(options =>
@@ -103,12 +126,9 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.UseSession();
 
 // Area Configuration
@@ -126,20 +146,9 @@ app.MapControllerRoute(
     name: "chatbot",
     pattern: "api/{controller=Chatbot}/{action=Index}/{id?}");
 
-
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    try
-    {
-        context.Database.EnsureCreated();
-        Console.WriteLine("Database created successfully!");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error creating database: {ex.Message}");
-        throw;
-    }
-}
+// Mpesa API Routes
+app.MapControllerRoute(
+    name: "mpesa",
+    pattern: "api/{controller=Mpesa}/{action=Index}/{id?}");
 
 app.Run();

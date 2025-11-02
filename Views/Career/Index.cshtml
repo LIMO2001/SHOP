@@ -1,0 +1,197 @@
+@model List<Career>
+@{
+    ViewData["Title"] = "Careers at DKL Empire";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-12">
+            <!-- Header Section -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold text-primary mb-3">Join Our Team</h1>
+                <p class="lead text-muted mb-4">
+                    Build your career with DKL Empire - Kenya's leading laptop and technology solutions provider
+                </p>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card bg-light border-0">
+                            <div class="card-body py-4">
+                                <div class="row text-center">
+                                    <div class="col-md-4 mb-3 mb-md-0">
+                                        <i class="fas fa-rocket fa-2x text-primary mb-2"></i>
+                                        <h5 class="fw-bold">Innovative Projects</h5>
+                                        <small class="text-muted">Work on cutting-edge technology</small>
+                                    </div>
+                                    <div class="col-md-4 mb-3 mb-md-0">
+                                        <i class="fas fa-users fa-2x text-success mb-2"></i>
+                                        <h5 class="fw-bold">Great Team</h5>
+                                        <small class="text-muted">Collaborate with talented professionals</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+                                        <h5 class="fw-bold">Career Growth</h5>
+                                        <small class="text-muted">Continuous learning and development</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Career Listings -->
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    @if (Model.Any())
+                    {
+                        <div class="mb-4">
+                            <h3 class="h4 mb-3">Current Openings</h3>
+                            <p class="text-muted">We have @Model.Count active position@(Model.Count > 1 ? "s" : "") available</p>
+                        </div>
+
+                        @foreach (var career in Model)
+                        {
+                            <div class="card shadow-sm mb-4 career-card" style="transition: all 0.3s ease;">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h5 class="card-title fw-bold text-primary mb-2">@career.Title</h5>
+                                            <div class="mb-2">
+                                                <span class="badge bg-light text-dark me-2">
+                                                    <i class="fas fa-building me-1"></i>@career.Department
+                                                </span>
+                                                <span class="badge bg-light text-dark me-2">
+                                                    <i class="fas fa-map-marker-alt me-1"></i>@career.Location
+                                                </span>
+                                                <span class="badge bg-light text-dark">
+                                                    <i class="fas fa-clock me-1"></i>@career.EmploymentType
+                                                </span>
+                                            </div>
+                                            <p class="card-text text-muted mb-3">
+                                                @(career.Description.Length > 200 ? career.Description.Substring(0, 200) + "..." : career.Description)
+                                            </p>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                @if (career.SalaryRangeMin.HasValue && career.SalaryRangeMax.HasValue)
+                                                {
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-money-bill-wave me-1"></i>
+                                                        KSh @career.SalaryRangeMin.Value.ToString("N0") - KSh @career.SalaryRangeMax.Value.ToString("N0")
+                                                    </span>
+                                                }
+                                                <span class="badge bg-info text-dark">
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    Apply by @career.ApplicationDeadline.ToString("MMM dd, yyyy")
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                            <a href="@Url.Action("Details", new { id = career.Id })" 
+                                               class="btn btn-primary btn-lg">
+                                                <i class="fas fa-eye me-1"></i>View Details
+                                            </a>
+                                            <div class="mt-2">
+                                                <small class="text-muted">
+                                                    Posted @career.DatePosted.ToString("MMM dd, yyyy")
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- No Careers Available -->
+                        <div class="text-center py-5">
+                            <i class="fas fa-briefcase fa-4x text-muted mb-4"></i>
+                            <h3 class="h4 text-muted mb-3">No Current Openings</h3>
+                            <p class="text-muted mb-4">
+                                We don't have any open positions at the moment, but check back soon as we're always growing!
+                            </p>
+                            <div class="row justify-content-center">
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Stay Updated</h5>
+                                            <p class="card-text small text-muted">
+                                                Follow us on social media or check our website regularly for new career opportunities.
+                                            </p>
+                                            <div class="social-links">
+                                                <a href="#" class="text-primary me-3"><i class="fab fa-linkedin fa-lg"></i></a>
+                                                <a href="#" class="text-info me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                                                <a href="#" class="text-dark"><i class="fab fa-facebook fa-lg"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Why Work With Us Section -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body py-5">
+                            <div class="row text-center">
+                                <div class="col-md-4 mb-4 mb-md-0">
+                                    <i class="fas fa-gem fa-3x mb-3"></i>
+                                    <h4>Quality Focus</h4>
+                                    <p class="mb-0">We deliver exceptional products and services to our customers</p>
+                                </div>
+                                <div class="col-md-4 mb-4 mb-md-0">
+                                    <i class="fas fa-heart fa-3x mb-3"></i>
+                                    <h4>Great Culture</h4>
+                                    <p class="mb-0">Supportive environment that values work-life balance</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="fas fa-award fa-3x mb-3"></i>
+                                    <h4>Recognition</h4>
+                                    <p class="mb-0">Your contributions are valued and rewarded</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .career-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+        }
+
+        .badge {
+            font-size: 0.8rem;
+            padding: 0.5em 0.8em;
+        }
+
+        .card-title {
+            color: #2c3e50;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add smooth hover effects
+            $('.career-card').hover(
+                function() {
+                    $(this).addClass('shadow-lg');
+                },
+                function() {
+                    $(this).removeClass('shadow-lg');
+                }
+            );
+        });
+    </script>
+}

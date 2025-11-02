@@ -1,81 +1,343 @@
 @model LaptopStore.Models.Order
 @{
     ViewData["Title"] = "Order Confirmation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container">
+<div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h2 class="mb-0"><i class="fas fa-check-circle me-2"></i>Order Confirmed!</h2>
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle fa-2x me-3"></i>
+                        <div>
+                            <h2 class="mb-0">Order Confirmed!</h2>
+                            <p class="mb-0">Thank you for shopping with DKL Empire</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <i class="fas fa-receipt fa-4x text-success mb-3"></i>
-                        <h3>Thank you for your order!</h3>
-                        <p class="lead">Your order has been placed successfully.</p>
+                
+                <div class="card-body p-4">
+                    <!-- Success Alert -->
+                    <div class="alert alert-success d-flex align-items-center mb-4">
+                        <i class="fas fa-check-circle fa-2x me-3"></i>
+                        <div>
+                            <h4 class="alert-heading mb-1">Payment Successful!</h4>
+                            <p class="mb-0">Your order has been confirmed and is being processed.</p>
+                        </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
-                            <h5>Order Details</h5>
-                            <p><strong>Order Number:</strong> @Model.OrderNumber</p>
-                            <p><strong>Order Date:</strong> @Model.OrderDate.ToString("MMMM dd, yyyy")</p>
-                            <p><strong>Status:</strong> <span class="badge bg-info">@Model.Status</span></p>
-                            <p><strong>Total Amount:</strong> $@Model.TotalAmount.ToString("F2")</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Shipping Information</h5>
-                            <p><strong>Shipping Address:</strong><br>@Model.ShippingAddress</p>
-                            <p><strong>Payment Method:</strong> @Model.PaymentMethod</p>
-                        </div>
-                    </div>
-
-                    <div class="mt-4">
-                        <h5>Order Items</h5>
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th>Quantity</th>
-                                        <th>Price</th>
-                                        <th>Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in Model.OrderItems)
+                        <!-- Order Summary -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-receipt me-2"></i>Order Summary
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-2">
+                                        <div class="col-6"><strong>Order Number:</strong></div>
+                                        <div class="col-6">#@Model.OrderNumber</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6"><strong>Order Date:</strong></div>
+                                        <div class="col-6">@Model.OrderDate.ToString("MMMM dd, yyyy 'at' hh:mm tt")</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6"><strong>Status:</strong></div>
+                                        <div class="col-6">
+                                            <span class="badge bg-success">@Model.Status</span>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6"><strong>Total Amount:</strong></div>
+                                        <div class="col-6">
+                                            <span class="fw-bold text-success">KSh @Model.TotalAmount.ToString("N2")</span>
+                                        </div>
+                                    </div>
+                                    @if (Model.PaymentDate.HasValue)
                                     {
-                                        <tr>
-                                            <td>@item.Product.Name</td>
-                                            <td>@item.Quantity</td>
-                                            <td>$@item.UnitPrice.ToString("F2")</td>
-                                            <td>$@((item.UnitPrice * item.Quantity).ToString("F2"))</td>
-                                        </tr>
+                                        <div class="row mb-2">
+                                            <div class="col-6"><strong>Payment Date:</strong></div>
+                                            <div class="col-6">@Model.PaymentDate.Value.ToString("MMMM dd, yyyy 'at' hh:mm tt")</div>
+                                        </div>
                                     }
-                                </tbody>
-                                <tfoot>
-                                    <tr class="table-success">
-                                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                        <td><strong>$@Model.TotalAmount.ToString("F2")</strong></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                                    @if (!string.IsNullOrEmpty(Model.MpesaReceiptNumber))
+                                    {
+                                        <div class="row mb-2">
+                                            <div class="col-6"><strong>M-Pesa Receipt:</strong></div>
+                                            <div class="col-6">
+                                                <code class="text-success">@Model.MpesaReceiptNumber</code>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shipping & Payment Info -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-truck me-2"></i>Delivery Information
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <strong>Shipping Address:</strong>
+                                        <p class="mb-0 mt-1">@Model.ShippingAddress</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Payment Method:</strong>
+                                        <div class="mt-1">
+                                            @if (Model.PaymentMethod == "M-Pesa")
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-mobile-alt me-1"></i>@Model.PaymentMethod
+                                                </span>
+                                                @if (Model.PaymentStatus == "Paid")
+                                                {
+                                                    <div class="mt-1">
+                                                        <small class="text-success">
+                                                            <i class="fas fa-check-circle me-1"></i>Payment Verified
+                                                        </small>
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-primary">@Model.PaymentMethod</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <strong>Payment Status:</strong>
+                                        <div class="mt-1">
+                                            @if (Model.PaymentStatus == "Paid")
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Paid
+                                                </span>
+                                            }
+                                            else if (Model.PaymentStatus == "Pending")
+                                            {
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-clock me-1"></i>Pending
+                                                </span>
+                                            }
+                                            else if (Model.PaymentStatus == "Failed")
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times-circle me-1"></i>Failed
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">@Model.PaymentStatus</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                        <a href="@Url.Action("DownloadReceipt", "Cart", new { id = Model.Id })" 
-                           class="btn btn-primary me-md-2">
-                            <i class="fas fa-download me-1"></i>Download Receipt
-                        </a>
-                        <a href="@Url.Action("Index", "Store")" class="btn btn-success">
-                            <i class="fas fa-shopping-bag me-1"></i>Continue Shopping
-                        </a>
+                    <!-- Order Items -->
+                    <div class="card border-0 shadow-sm mt-2">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shopping-bag me-2"></i>Order Items
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="border-0">Product</th>
+                                            <th class="border-0 text-center">Quantity</th>
+                                            <th class="border-0 text-end">Unit Price</th>
+                                            <th class="border-0 text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.OrderItems)
+                                        {
+                                            <tr>
+                                                <td class="border-0">
+                                                    <div class="d-flex align-items-center">
+                                                        @if (!string.IsNullOrEmpty(item.Product?.ImageUrl))
+                                                        {
+                                                            <img src="@item.Product.ImageUrl" alt="@item.Product.Name" 
+                                                                 class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" 
+                                                                 style="width: 60px; height: 60px;">
+                                                                <i class="fas fa-laptop text-muted"></i>
+                                                            </div>
+                                                        }
+                                                        <div>
+                                                            <h6 class="mb-0">@item.ProductName</h6>
+                                                            @if (item.Product?.Category != null)
+                                                            {
+                                                                <small class="text-muted">@item.Product.Category.Name</small>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="border-0 text-center">@item.Quantity</td>
+                                                <td class="border-0 text-end">KSh @item.UnitPrice.ToString("N2")</td>
+                                                <td class="border-0 text-end fw-bold">KSh @((item.UnitPrice * item.Quantity).ToString("N2"))</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                    <tfoot class="table-success">
+                                        <tr>
+                                            <td colspan="3" class="border-0 text-end"><strong>Grand Total:</strong></td>
+                                            <td class="border-0 text-end"><strong>KSh @Model.TotalAmount.ToString("N2")</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- M-Pesa Payment Details (if applicable) -->
+                    @if (Model.PaymentMethod == "M-Pesa")
+                    {
+                        <div class="card border-0 bg-warning bg-opacity-10 mt-4">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6 class="text-warning">
+                                            <i class="fas fa-mobile-alt me-2"></i>M-Pesa Payment Confirmation
+                                        </h6>
+                                        <p class="mb-0 text-muted">
+                                            @if (!string.IsNullOrEmpty(Model.MpesaReceiptNumber))
+                                            {
+                                                <text>
+                                                    Your M-Pesa payment has been confirmed. 
+                                                    Transaction receipt: <strong class="text-success">@Model.MpesaReceiptNumber</strong>
+                                                </text>
+                                            }
+                                            else
+                                            {
+                                                <text>
+                                                    You will receive an M-Pesa confirmation message shortly. 
+                                                    Keep the transaction code for your records.
+                                                </text>
+                                            }
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4 text-md-end">
+                                        <div class="bg-white rounded p-2 border">
+                                            <small class="text-muted d-block">Payment Method</small>
+                                            <strong class="text-success">M-Pesa</strong>
+                                            @if (Model.PaymentStatus == "Paid")
+                                            {
+                                                <div class="mt-1">
+                                                    <small class="text-success">
+                                                        <i class="fas fa-check-circle me-1"></i>Verified
+                                                    </small>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Next Steps -->
+                    <div class="card border-0 bg-primary bg-opacity-10 mt-4">
+                        <div class="card-body">
+                            <h6 class="text-primary">
+                                <i class="fas fa-info-circle me-2"></i>What's Next?
+                            </h6>
+                            <div class="row text-center mt-3">
+                                <div class="col-md-4 mb-3">
+                                    <div class="bg-white rounded p-3 border">
+                                        <i class="fas fa-shipping-fast fa-2x text-primary mb-2"></i>
+                                        <h6>Order Processing</h6>
+                                        <small class="text-muted">We're preparing your order for shipment</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="bg-white rounded p-3 border">
+                                        <i class="fas fa-truck fa-2x text-success mb-2"></i>
+                                        <h6>Delivery</h6>
+                                        <small class="text-muted">Your order will be delivered within 3-5 business days</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="bg-white rounded p-3 border">
+                                        <i class="fas fa-headset fa-2x text-info mb-2"></i>
+                                        <h6>Support</h6>
+                                        <small class="text-muted">Need help? Contact our support team</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <div class="mb-3 mb-md-0">
+                            <a href="@Url.Action("Index", "Store")" class="btn btn-outline-primary">
+                                <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+                            </a>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="@Url.Action("DownloadReceipt", "Cart", new { id = Model.Id })" 
+                               class="btn btn-success">
+                                <i class="fas fa-download me-2"></i>Download Receipt
+                            </a>
+                            <a href="@Url.Action("Index", "Store")" class="btn btn-primary">
+                                <i class="fas fa-home me-2"></i>Back to Home
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .card {
+            border-radius: 15px;
+        }
+        
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+        }
+        
+        .table th {
+            border-top: none;
+            font-weight: 600;
+        }
+        
+        .badge {
+            font-size: 0.8em;
+            padding: 0.5em 0.8em;
+        }
+        
+        .img-thumbnail {
+            border-radius: 10px;
+        }
+        
+        code {
+            background: #f8f9fa;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+}

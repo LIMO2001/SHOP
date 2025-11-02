@@ -18,8 +18,51 @@ public class HomeController : Controller
         return View();
     }
 
+    public IActionResult Contact()
+    {
+        ViewData["Title"] = "Contact Us";
+        return View();
+    }
+
+    public IActionResult Shipping()
+    {
+        ViewData["Title"] = "Shipping Information";
+        return View();
+    }
+
+    public IActionResult Returns()
+    {
+        ViewData["Title"] = "Returns & Refunds";
+        return View();
+    }
+
+    public IActionResult FAQ()
+    {
+        ViewData["Title"] = "Frequently Asked Questions";
+        return View();
+    }
+
+    public IActionResult Warranty()
+    {
+        ViewData["Title"] = "Warranty Information";
+        return View();
+    }
+
+    public IActionResult About()
+    {
+        ViewData["Title"] = "About Us";
+        return View();
+    }
+
     public IActionResult Privacy()
     {
+        ViewData["Title"] = "Privacy Policy";
+        return View();
+    }
+
+    public IActionResult Terms()
+    {
+        ViewData["Title"] = "Terms of Service";
         return View();
     }
 
