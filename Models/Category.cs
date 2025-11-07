@@ -7,7 +7,6 @@ namespace LaptopStore.Models
         public string Description { get; set; } = string.Empty;
         public string ImageUrl { get; set; } = "/images/default-category.jpg";
 
-        // Navigation property
         public ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }

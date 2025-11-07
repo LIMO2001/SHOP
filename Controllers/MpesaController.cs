@@ -61,7 +61,7 @@ namespace LaptopStore.Controllers
                 }
 
                 var response = await _mpesaService.InitiateSTKPushAsync(
-                    request.PhoneNumber, // This comes from MpesaPaymentRequest, NOT from Order
+                    request.PhoneNumber, 
                     amount,
                     request.AccountReference ?? $"ORDER_{request.OrderId}",
                     request.TransactionDescription ?? "Laptop Purchase"
@@ -69,13 +69,13 @@ namespace LaptopStore.Controllers
 
                 if (response.Success)
                 {
-                    // Update order with payment reference
+                    //  payment reference
                     order.PaymentReference = response.CheckoutRequestID;
                     order.PaymentStatus = "Pending";
                     order.PaymentMethod = "M-Pesa";
                     await _context.SaveChangesAsync();
 
-                    // Update the payment record with OrderId
+                    // Update payment record with OrderId
                     var payment = await _context.MpesaPayments
                         .FirstOrDefaultAsync(p => p.CheckoutRequestID == response.CheckoutRequestID);
                     if (payment != null)

@@ -27,7 +27,7 @@ namespace LaptopStore.Models
 
         [Required]
         [StringLength(50)]
-        public string EmploymentType { get; set; } // Full-time, Part-time, Contract
+        public string EmploymentType { get; set; } // Full-time, Part-time, Contract, etc.
 
         public decimal? SalaryRangeMin { get; set; }
         public decimal? SalaryRangeMax { get; set; }

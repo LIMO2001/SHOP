@@ -9,32 +9,32 @@ using LaptopStore.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+
 builder.Services.AddScoped<ICareerService, CareerService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IBlogService, BlogService>();
 
-// Add Razor Runtime Compilation in Development mode
+//  Razor Runtime Compilation
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 }
 
-// Add HttpClient
+// HttpClient
 builder.Services.AddHttpClient();
 
-// 🔥 GUARANTEED MPESA CONFIGURATION 🔥
+// Mpesa configuration
 builder.Services.Configure<MpesaConfig>(options =>
 {
-    // Use hardcoded values to guarantee it works
+    // json values
     options.ConsumerKey = "IuzgzMe1aFgR7D6DqFYLeyMAkwHH2OzVyAftoPliNutJNABF";
     options.ConsumerSecret = "wJGFEwK6pqmNj11lrG6wMePRKGCwFcaW2fnJLQqXAMQOtMi5gQ5P4vqyAFijPg25";
     options.Passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
     options.BusinessShortCode = "174379";
-    options.CallbackUrl = "https://localhost:5068/api/mpesa/callback";
+    options.CallbackUrl = "https://webhook.site/dd189cde-6150-4f45-b17e-fd368f3df1cc";
     options.Environment = "sandbox";
     
-    Console.WriteLine("✅ MPESA CONFIGURATION HARDCODED AND GUARANTEED TO WORK");
+    Console.WriteLine("mpesa config succesfuly");
 });
 
 // Register MpesaService

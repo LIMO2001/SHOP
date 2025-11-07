@@ -7,6 +7,6 @@ namespace LaptopStore.Models
         public string Passkey { get; set; }
         public string BusinessShortCode { get; set; }
         public string CallbackUrl { get; set; }
-        public string Environment { get; set; } // "sandbox" or "production"
+        public string Environment { get; set; }
     }
 }

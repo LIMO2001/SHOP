@@ -1,8 +1,115 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home - Laptop Store";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- Hero Section -->
+<section class="hero-section text-white text-center py-5" style="background: linear-gradient(90deg, #0d6efd, #6610f2);">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Welcome to Laptop Store</h1>
+        <p class="lead mb-4">Find the best laptops, accessories, and tech deals — all in one place.</p>
+        <a href="@Url.Action("Home", "Home")" class="btn btn-light btn-lg rounded-pill px-4">Shop Now</a>
+    </div>
+</section>
+
+<!-- Featured Categories -->
+<section class="py-5 bg-light">
+    <div class="container text-center">
+        <h2 class="mb-4 fw-semibold">Shop by Category</h2>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <img src="/Images/HP.jpG" class="card-img-top rounded-top" alt="">
+                    <div class="card-body">
+                        <h5 class="card-title">Gaming Laptops</h5>
+                        <a href="Home" class="btn btn-outline-primary btn-sm">Explore</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <img src="/Images/macb.jpeg" class="card-img-top rounded-top" alt="">
+                    <div class="card-body">
+                        <h5 class="card-title">Business Laptops</h5>
+                        <a href="Home" class="btn btn-outline-primary btn-sm">Explore</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <img src="/Images/macb.jpeg" class="card-img-top rounded-top" alt="">
+                    <div class="card-body">
+                        <h5 class="card-title">Student Laptops</h5>
+                        <a href="#" class="btn btn-outline-primary btn-sm">Explore</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Products -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-4 fw-semibold">Popular Products</h2>
+        <div class="row g-4">
+            @* Example of looping through products *@
+            @foreach (var product in ViewBag.FeaturedProducts ?? new List<LaptopStore.Models.Product>())
+            {
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <img src="@Url.Content("~/Image/products/" + product.ImageUrl)" class="card-img-top rounded-top" alt="@product.Name">
+                        <div class="card-body text-center">
+                            <h6 class="fw-semibold">@product.Name</h6>
+                            <p class="text-muted mb-2">@product.Brand</p>
+                            <p class="fw-bold text-primary mb-3">Ksh @product.Price.ToString("N0")</p>
+                            <a href="@Url.Action("Details", "Store", new { id = product.Id })" class="btn btn-outline-primary btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="text-center mt-4">
+            <a href="@Url.Action("Home", "Home")" class="btn btn-primary rounded-pill px-4">View All Products</a>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Section -->
+<section class="bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-4 fw-semibold">Latest Tech News</h2>
+        <div class="row g-4">
+            @foreach (var post in ViewBag.LatestBlogs ?? new List<LaptopStore.Models.BlogPost>())
+            {
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <img src="@Url.Content("~/Image/blog/" + post.ImageUrl)" class="card-img-top rounded-top" alt="@post.Title">
+                        <div class="card-body">
+                            <h5 class="card-title">@post.Title</h5>
+                            <p class="text-muted small">@post.CreatedAt.ToString("MMM dd, yyyy")</p>
+                            <p>@(post.Content.Length > 100 ? post.Content.Substring(0, 100) + "..." : post.Content)</p>
+                            <a href="@Url.Action("Details", "Info", new { id = post.Id })" class="btn btn-outline-primary btn-sm">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Brand Section -->
+<section class="py-5 text-center">
+    <div class="container">
+        <h2 class="fw-semibold mb-4">Top Brands We Stock</h2>
+        <div class="d-flex justify-content-center align-items-center flex-wrap gap-4">
+            <img src="/Images/hpp.jpeg" alt="HP" style="height:50px;">
+            <img src="/Images/Dell logo.jpeg" alt="Dell" style="height:50px;">
+            <img src="/Images/lenovo.jpeg" alt="Lenovo" style="height:50px;">
+            <img src="/Images/mac.jpeg" alt="mac" style="height:50px;">
+            <img src="/Images/Asus.jpeg" alt="Asus" style="height:50px;">
+        </div>
+    </div>
+</section>
+
+

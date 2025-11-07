@@ -6,7 +6,7 @@ namespace LaptopStore.Models
         public int Quantity { get; set; }
         public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 
-        // Foreign keys
+        
         public int UserId { get; set; }
         public User User { get; set; } = null!;
 

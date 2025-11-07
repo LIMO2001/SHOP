@@ -15,16 +15,14 @@ namespace LaptopStore.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         
-        // New DbSets for Blog and Career
         public DbSet<BlogPost> BlogPosts { get; set; }
         public DbSet<Career> Careers { get; set; }
         
-        // M-Pesa Payments
         public DbSet<MpesaPayment> MpesaPayments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // User configuration
+            
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(u => u.Id);
@@ -98,7 +96,7 @@ namespace LaptopStore.Data
                 entity.Property(e => e.DatePosted).IsRequired();
                 entity.Property(e => e.IsPublished).IsRequired();
                 
-                // Add index for better performance on slug lookups
+                
                 entity.HasIndex(e => e.Slug).IsUnique();
             });
 
@@ -118,7 +116,6 @@ namespace LaptopStore.Data
                 entity.Property(e => e.ApplicationDeadline).IsRequired();
                 entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
                 
-                // Add index for better performance on active career queries
                 entity.HasIndex(e => e.IsActive);
                 entity.HasIndex(e => e.ApplicationDeadline);
             });
@@ -132,7 +129,7 @@ namespace LaptopStore.Data
                 entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(15);
                 entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
                 
-                // ✅ MAKE THESE NULLABLE
+                
                 entity.Property(e => e.AccountReference).HasMaxLength(100).IsRequired(false);
                 entity.Property(e => e.TransactionDescription).HasMaxLength(255).IsRequired(false);
                 entity.Property(e => e.ResponseCode).HasMaxLength(10).IsRequired(false);
@@ -144,17 +141,15 @@ namespace LaptopStore.Data
                 
                 entity.Property(e => e.PaymentStatus).IsRequired().HasMaxLength(20);
                 
-                // Add indexes for better performance
                 entity.HasIndex(e => e.CheckoutRequestID);
                 entity.HasIndex(e => e.MerchantRequestID);
                 entity.HasIndex(e => e.OrderId);
                 entity.HasIndex(e => e.PaymentStatus);
                 
-                // ✅ TEMPORARILY REMOVED RELATIONSHIP CONFIGURATION
-                // entity.HasOne(e => e.Order)
-                //       .WithMany()
-                //       .HasForeignKey(e => e.OrderId)
-                //       .OnDelete(DeleteBehavior.Restrict);
+                 //entity.HasOne(e => e.Order)
+                   //    .WithMany()
+                    //  .HasForeignKey(e => e.OrderId)
+                    //   .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

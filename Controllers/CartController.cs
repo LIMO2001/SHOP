@@ -7,8 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LaptopStore.Controllers
 {
-    // Disable auth temporarily for local testing
-    // [Authorize(Roles = "Customer")]
+     [Authorize(Roles = "Customer")]
     public class CartController : Controller
     {
         private readonly CartService _cartService;

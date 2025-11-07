@@ -30,7 +30,7 @@ namespace LaptopStore.Services
             _context = context;
             _logger = logger;
 
-            // Validate configuration immediately
+            // Validate configuration
             ValidateConfiguration();
         }
 
@@ -111,7 +111,7 @@ namespace LaptopStore.Services
             if (!_configValidated)
                 throw new InvalidOperationException("Mpesa configuration not validated");
 
-            _logger.LogInformation("=== 🚀 STARTING STK PUSH ===");
+            _logger.LogInformation("===  STARTING STK PUSH ===");
             _logger.LogInformation("Phone: {Phone}, Amount: {Amount}, Ref: {Reference}", 
                 phoneNumber, amount, accountReference);
 
@@ -142,17 +142,17 @@ namespace LaptopStore.Services
                     Password = password,
                     Timestamp = timestamp,
                     TransactionType = "CustomerPayBillOnline",
-                    Amount = formattedAmount, // ✅ Now sending as string without decimals
+                    Amount = formattedAmount,
                     PartyA = formattedPhone,
                     PartyB = _config.BusinessShortCode,
                     PhoneNumber = formattedPhone,
-                    // ✅ HARDCODED FIX: Use webhook.site URL directly
+                
                     CallBackURL = "https://webhook.site/dd189cde-6150-4f45-b17e-fd368f3df1cc",
                     AccountReference = accountReference,
                     TransactionDesc = transactionDesc
                 };
 
-                // ✅ ADDED: Log the complete request
+                
                 _logger.LogInformation("📦 STK Request Payload: {@StkRequest}", stkRequest);
 
                 var url = _config.Environment == "sandbox"
@@ -192,7 +192,6 @@ namespace LaptopStore.Services
                     };
                 }
                 
-                // ✅ FIXED: Save payment record with nullable OrderId
                 try
                 {
                     // Extract OrderId from accountReference (format: "ORDER_34")
@@ -203,14 +202,14 @@ namespace LaptopStore.Services
                         CheckoutRequestID = stkResponse.CheckoutRequestID,
                         MerchantRequestID = stkResponse.MerchantRequestID,
                         PhoneNumber = formattedPhone,
-                        Amount = amount, // Keep original amount for records
+                        Amount = amount, 
                         AccountReference = accountReference,
                         TransactionDescription = transactionDesc,
                         ResponseCode = stkResponse.ResponseCode,
                         ResponseDescription = stkResponse.ResponseDescription,
                         CustomerMessage = stkResponse.CustomerMessage,
                         PaymentStatus = "Pending",
-                        OrderId = orderId // ✅ Now nullable
+                        OrderId = orderId 
                     };
 
                     _context.MpesaPayments.Add(payment);
@@ -222,7 +221,6 @@ namespace LaptopStore.Services
                 {
                     _logger.LogError(dbEx, "❌ Database error saving payment record");
                     _logger.LogWarning("⚠️ STK Push was successful but payment record couldn't be saved");
-                    // Continue anyway - the STK Push was successful
                 }
 
                 _logger.LogInformation("✅ STK Push initiated successfully. CheckoutRequestID: {CheckoutID}", stkResponse.CheckoutRequestID);
@@ -351,7 +349,6 @@ namespace LaptopStore.Services
                 return phoneNumber;
         }
 
-        // ✅ UPDATED: Helper method to extract OrderId from account reference (returns nullable)
         private int? ExtractOrderIdFromReference(string accountReference)
         {
             if (string.IsNullOrEmpty(accountReference))
@@ -368,7 +365,7 @@ namespace LaptopStore.Services
             else
             {
                 _logger.LogWarning("⚠️ Could not extract OrderId from reference: {Reference}", accountReference);
-                return null; // ✅ Return null instead of 0
+                return null;
             }
         }
     }

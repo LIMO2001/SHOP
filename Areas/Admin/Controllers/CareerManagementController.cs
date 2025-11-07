@@ -39,6 +39,8 @@ namespace LaptopStore.Areas.Admin.Controllers
                 TempData["Success"] = "Career opportunity created successfully!";
                 return RedirectToAction(nameof(Index));
             }
+
+            TempData["Error"] = "Failed to create career. Please check your input.";
             return View(career);
         }
 
@@ -63,21 +65,12 @@ namespace LaptopStore.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    await _careerService.UpdateCareerAsync(career);
-                    TempData["Success"] = "Career opportunity updated successfully!";
-                }
-                catch (Exception)
-                {
-                    if (await _careerService.GetCareerByIdAsync(id) == null)
-                    {
-                        return NotFound();
-                    }
-                    throw;
-                }
+                await _careerService.UpdateCareerAsync(career);
+                TempData["Success"] = "Career opportunity updated successfully!";
                 return RedirectToAction(nameof(Index));
             }
+
+            TempData["Error"] = "Update failed. Please check your input.";
             return View(career);
         }
 
