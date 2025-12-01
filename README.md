@@ -90,6 +90,9 @@ Admin Dashboard
 
 <img width="950" height="474" alt="image" src="https://github.com/user-attachments/assets/be0427c7-0a0f-408f-a399-25a72fb10a29" />
 
+<img width="1920" height="1080" alt="Screenshot 2025-11-02 053003" src="https://github.com/user-attachments/assets/1899fa28-9176-477a-966b-b5e0cec31665" />
+
+
 	
 🪄 Extras
 
