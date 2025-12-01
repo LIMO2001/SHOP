@@ -11,6 +11,10 @@ Browse laptops by category
 View detailed product descriptions
 
 Add to cart and checkout
+Mpesa  Intergration
+<img width="720" height="600" alt="image" src="https://github.com/user-attachments/assets/2d6ff725-2df3-412a-a189-fdb229d29b04" />
+<img width="576" height="1280" alt="image" src="https://github.com/user-attachments/assets/49fc650e-dfd0-4961-b9ab-370ad9330933" />
+
 
 Search and filter products
 
@@ -87,6 +91,8 @@ Login
 
 Admin Dashboard
 <img width="959" height="475" alt="image" src="https://github.com/user-attachments/assets/d2e34d55-9d6c-48cc-a536-e12619370f1d" />
+<img width="1920" height="1080" alt="Screenshot 2025-11-03 132822" src="https://github.com/user-attachments/assets/3dbf83f8-a2fd-41a6-b07e-92b9193a199c" />
+
 
 <img width="950" height="474" alt="image" src="https://github.com/user-attachments/assets/be0427c7-0a0f-408f-a399-25a72fb10a29" />
 
